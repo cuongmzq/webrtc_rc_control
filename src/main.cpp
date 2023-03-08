@@ -1,0 +1,378 @@
+#include "nlohmann/json.hpp"
+
+#include "helpers.hpp"
+#include "ArgParser.hpp"
+
+#include <atomic>
+#include <chrono>
+#include <random>
+#include <iostream>
+#include <memory>
+#include <thread>
+#include <unordered_map>
+#include <memory>
+#include "h264_common.h"
+extern "C" {
+    #include "mmalcam.h"
+    
+    int start_mmalcam(on_buffer_cb cb);
+}
+#ifdef _WIN32
+#include <winsock2.h>
+#else
+#include <arpa/inet.h>
+#endif
+void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T*);
+
+using namespace rtc;
+using namespace std;
+using namespace std::chrono_literals;
+
+using json = nlohmann::json;
+
+template <class T> weak_ptr<T> make_weak_ptr(shared_ptr<T> ptr) { return ptr; }
+
+/// all connected clients
+unordered_map<string, shared_ptr<Client>> clients{};
+
+/// Creates peer connection and client representation
+/// @param config Configuration
+/// @param wws Websocket for signaling
+/// @param id Client ID
+/// @returns Client
+shared_ptr<Client> createPeerConnection(const Configuration &config,
+                                        weak_ptr<WebSocket> wws,
+                                        string id);
+
+/// Add client to stream
+/// @param client Client
+/// @param adding_video True if adding video
+void addToStream(shared_ptr<Client> client, bool isAddingVideo);
+
+/// Main dispatch queue
+DispatchQueue MainThread("Main");
+
+const string defaultIPAddress = "0.0.0.0";
+const uint16_t defaultPort = 8000;
+string ip_address = defaultIPAddress;
+uint16_t port = defaultPort;
+
+void sendInitialNalus(shared_ptr<ClientTrackData> video, uint32_t timestamp);
+uint32_t last_frame_timestamp = 0;
+uint32_t last_frame_duration = 0;
+
+std::byte* s_buf = static_cast<std::byte*>(malloc(100000));
+size_t s_buf_length = 0;
+size_t s_data_length = 0;
+
+std::optional<std::vector<std::byte>> previousUnitType5 = std::nullopt;
+std::optional<std::vector<std::byte>> previousUnitType7 = std::nullopt;
+std::optional<std::vector<std::byte>> previousUnitType8 = std::nullopt;
+std::byte* start_ptr;
+
+bool pending_frame = false;
+
+/// Incomming message handler for websocket
+/// @param message Incommint message
+/// @param config Configuration
+/// @param ws Websocket
+void wsOnMessage(json message, Configuration config, shared_ptr<WebSocket> ws) {
+    auto it = message.find("id");
+    if (it == message.end())
+        return;
+    string id = it->get<string>();
+
+    it = message.find("type");
+    if (it == message.end())
+        return;
+    string type = it->get<string>();
+
+    if (type == "request") {
+        clients.emplace(id, createPeerConnection(config, make_weak_ptr(ws), id));
+    } else if (type == "answer") {
+        if (auto jt = clients.find(id); jt != clients.end()) {
+            auto pc = jt->second->peerConnection;
+            auto sdp = message["sdp"].get<string>();
+            auto description = Description(sdp, type);
+            pc->setRemoteDescription(description);
+        }
+    }
+}
+
+int main(int argc, char **argv) try {
+    std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
+
+    bool enableDebugLogs = false;
+    bool printHelp = false;
+    int c = 0;
+    auto parser = ArgParser({{"a", "audio"}, {"b", "video"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
+    auto parsingResult = parser.parse(argc, argv, [](string key, string value) {
+        if (key == "audio") {
+            opusSamplesDirectory = value + "/";
+        } else if (key == "video") {
+            h264SamplesDirectory = value + "/";
+        } else if (key == "ip") {
+            ip_address = value;
+        } else if (key == "port") {
+            port = atoi(value.data());
+        } else {
+            cerr << "Invalid option --" << key << " with value " << value << endl;
+            return false;
+        }
+        return true;
+    }, [&enableDebugLogs, &printHelp](string flag){
+        if (flag == "verbose") {
+            enableDebugLogs = true;
+        } else if (flag == "help") {
+            printHelp = true;
+        } else {
+            cerr << "Invalid flag --" << flag << endl;
+            return false;
+        }
+        return true;
+    });
+    if (!parsingResult) {
+        return 1;
+    }
+
+    if (printHelp) {
+        cout << "usage: stream-h264 [-a opus_samples_folder] [-b h264_samples_folder] [-d ip_address] [-p port] [-v] [-h]" << endl
+        << "Arguments:" << endl
+        << "\t -d " << "Signaling server IP address (default: " << defaultIPAddress << ")." << endl
+        << "\t -p " << "Signaling server port (default: " << defaultPort << ")." << endl
+        << "\t -v " << "Enable debug logs." << endl
+        << "\t -h " << "Print this help and exit." << endl;
+        return 0;
+    }
+    if (enableDebugLogs) {
+        InitLogger(LogLevel::Debug);
+    }
+
+    while (true) {
+        string id;
+        cout << "Enter to exit" << endl;
+        cin >> id;
+        cin.ignore();
+        cout << "exiting" << endl;
+        break;
+    }
+
+    cout << "Cleaning up..." << endl;
+    return 0;
+
+} catch (const std::exception &e) {
+    std::cout << "Error: " << e.what() << std::endl;
+    return -1;
+}
+
+shared_ptr<ClientTrackData> addVideo(const shared_ptr<PeerConnection> pc, const uint8_t payloadType, const uint32_t ssrc, const string cname, const string msid, const function<void (void)> onOpen) {
+    auto video = Description::Video(cname);
+    video.addH264Codec(payloadType);
+    video.setBitrate(3000);
+    video.addSSRC(ssrc, cname, msid, cname);
+    auto track = pc->addTrack(video);
+    // create RTP configuration
+    auto rtpConfig = make_shared<RtpPacketizationConfig>(ssrc, cname, payloadType, H264RtpPacketizer::defaultClockRate);
+    // create packetizer
+    auto packetizer = make_shared<H264RtpPacketizer>(H264RtpPacketizer::Separator::Length, rtpConfig);
+    // create H264 handler
+    auto h264Handler = make_shared<H264PacketizationHandler>(packetizer);
+    // add RTCP SR handler
+    auto srReporter = make_shared<RtcpSrReporter>(rtpConfig);
+    h264Handler->addToChain(srReporter);
+    // add RTCP NACK handler
+    auto nackResponder = make_shared<RtcpNackResponder>();
+    h264Handler->addToChain(nackResponder);
+    // set handler
+    track->setMediaHandler(h264Handler);
+    track->onOpen(onOpen);
+    auto trackData = make_shared<ClientTrackData>(track, srReporter);
+    return trackData;
+}
+
+// Create and setup a PeerConnection
+shared_ptr<Client> createPeerConnection(const Configuration &config,
+                                                weak_ptr<WebSocket> wws,
+                                                string id) {
+    auto pc = make_shared<PeerConnection>(config);
+    auto client = make_shared<Client>(pc);
+
+    pc->onStateChange([id](PeerConnection::State state) {
+        cout << "State: " << state << endl;
+        if (state == PeerConnection::State::Disconnected ||
+            state == PeerConnection::State::Failed ||
+            state == PeerConnection::State::Closed) {
+            // remove disconnected client
+            MainThread.dispatch([id]() {
+                clients.erase(id);
+            });
+        }
+    });
+
+    pc->onGatheringStateChange(
+        [wpc = make_weak_ptr(pc), id, wws](PeerConnection::GatheringState state) {
+        cout << "Gathering State: " << state << endl;
+        if (state == PeerConnection::GatheringState::Complete) {
+            if(auto pc = wpc.lock()) {
+                auto description = pc->localDescription();
+                json message = {
+                    {"id", id},
+                    {"type", description->typeString()},
+                    {"sdp", string(description.value())}
+                };
+                // Gathering complete, send answer
+                if (auto ws = wws.lock()) {
+                    ws->send(message.dump());
+                }
+            }
+        }
+    });
+
+    client->video = addVideo(pc, 102, 1, "video-stream", "stream1", [id, wc = make_weak_ptr(client)]() {
+        MainThread.dispatch([wc]() {
+            if (auto c = wc.lock()) {
+                addToStream(c, true);
+            }
+        });
+        cout << "Video from " << id << " opened" << endl;
+    });
+
+    auto dc = pc->createDataChannel("ping-pong");
+    dc->onOpen([id, wdc = make_weak_ptr(dc)]() {
+        if (auto dc = wdc.lock()) {
+            dc->send("Ping");
+        }
+    });
+
+    dc->onMessage(nullptr, [id, wdc = make_weak_ptr(dc)](string msg) {
+        cout << "Message from " << id << " received: " << msg << endl;
+        if (auto dc = wdc.lock()) {
+            dc->send("Ping");
+        }
+    });
+    client->dataChannel = dc;
+
+    pc->setLocalDescription();
+    return client;
+};
+
+
+/// Add client to stream
+/// @param client Client
+/// @param adding_video True if adding video
+void addToStream(shared_ptr<Client> client, bool isAddingVideo) {
+    client->setState(Client::State::Ready);
+    sendInitialNalus(client->video.value(), last_frame_timestamp);
+}
+
+
+void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
+    if (pending_frame) {
+        pending_frame = false;
+    } else {
+        s_buf_length = 0;
+        if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) {
+           pending_frame = true;
+        }
+    }
+
+    last_frame_duration = buffer->pts - last_frame_timestamp;
+    last_frame_timestamp = buffer->pts;
+
+    std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
+
+    for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
+        size_t start_offset = jt->start_offset;
+        size_t payload_start_offset = jt->payload_start_offset;
+        size_t payload_size = jt->payload_size;
+        
+        start_ptr = s_buf + s_buf_length;
+        s_buf_length += 4 + payload_size;
+
+        memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
+
+        *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
+        *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
+        *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
+        *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
+
+        auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+        switch (type) {
+            case 7:
+                previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
+                std::cout << "Found Unit::Type " << type << std::endl;
+                break;
+            case 8:
+                previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
+                std::cout << "Found Unit::Type " << type << std::endl;
+                break;
+            case 5:
+                previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
+                std::cout << "Found Unit::Type " << type << std::endl;
+                break;
+        }
+    }
+
+    if (!pending_frame) {
+        /** Last working copy**/
+        for(auto id_client: clients) {
+            auto id = id_client.first;
+            auto client = id_client.second;
+            auto optTrackData = client->video;
+            if (client->getState() == Client::State::Ready && optTrackData.has_value()) {
+                auto trackData = optTrackData.value();
+                auto rtpConfig = trackData->sender->rtpConfig;
+
+                // // sample time is in us, we need to convert it to seconds
+                auto elapsedSeconds = double(last_frame_duration) / (1000 * 1000);
+                // get elapsed time in clock rate
+                uint32_t elapsedTimestamp = rtpConfig->secondsToTimestamp(elapsedSeconds);
+                // set new timestamp
+                rtpConfig->timestamp = rtpConfig->startTimestamp + elapsedTimestamp;
+
+                // get elapsed time in clock rate from last RTCP sender report
+                auto reportElapsedTimestamp = rtpConfig->timestamp - trackData->sender->lastReportedTimestamp();
+                // check if last report was at least 1 second ago
+                if (rtpConfig->timestampToSeconds(reportElapsedTimestamp) > 1) {
+                    trackData->sender->setNeedsToReport();
+                }
+
+                trackData->track->send(s_buf, s_buf_length);
+            }
+        }
+    }
+}
+
+vector<byte> initialNALUS() {
+    vector<byte> units{};
+    if (previousUnitType7.has_value()) {
+        auto nalu = previousUnitType7.value();
+        units.insert(units.end(), nalu.begin(), nalu.end());
+    }
+    if (previousUnitType8.has_value()) {
+        auto nalu = previousUnitType8.value();
+        units.insert(units.end(), nalu.begin(), nalu.end());
+    }
+    if (previousUnitType5.has_value()) {
+        auto nalu = previousUnitType5.value();
+        units.insert(units.end(), nalu.begin(), nalu.end());
+    }
+    return units;
+}
+
+/// Send previous key frame so browser can show something to user
+/// @param stream Stream
+/// @param video Video track data
+void sendInitialNalus(shared_ptr<ClientTrackData> video, uint32_t timestamp) {
+    auto initialNalus = initialNALUS();
+
+    // send previous NALU key frame so users don't have to wait to see stream works
+    if (!initialNalus.empty()) {
+        const double frameDuration_s = double(last_frame_duration) / (1000 * 1000);
+        const uint32_t frameTimestampDuration = video->sender->rtpConfig->secondsToTimestamp(frameDuration_s);
+        video->sender->rtpConfig->timestamp = video->sender->rtpConfig->startTimestamp - frameTimestampDuration * 2;
+        video->track->send(initialNalus);
+        video->sender->rtpConfig->timestamp += frameTimestampDuration;
+        video->track->send(initialNalus);
+    }
+}
