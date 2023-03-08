@@ -28,5 +28,5 @@ set(LIBRARY_LIST
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-add_executable(main SOURCE_LIST)
-target_link_libraries(main PRIVATE LIBRARY_LIST Threads::Threads)
+add_executable(main ${SOURCE_LIST})
+target_link_libraries(main PRIVATE ${LIBRARY_LIST} Threads::Threads)
