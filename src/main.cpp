@@ -386,37 +386,37 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                     if (nalu_size > 0) {
                         payload_size = start_offset - nalu_index.payload_start_offset;
                         // nalu_index.payload_size = payload_size;
+                        /****************************************/
+                        // size_t start_offset = jt->start_offset;
+                        // size_t payload_start_offset = jt->payload_start_offset;
+                        // size_t payload_size = jt->payload_size;
+                        
+                        start_ptr = s_buf + s_buf_length;
+                        s_buf_length += 4 + payload_size;
+
+                        memcpy(start_ptr + 4, buffer_data + nalu_index.payload_start_offset, payload_size);
+
+                        *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
+                        *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
+                        *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
+                        *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
+
+                        auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+                        switch (type) {
+                            case 7:
+                                previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
+                                break;
+                            case 8:
+                                previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
+                                break;
+                            case 5:
+                                previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
+                                break;
+                        }
+                        /***************************************/
                     }
 
-                    /****************************************/
-                    // size_t start_offset = jt->start_offset;
-                    // size_t payload_start_offset = jt->payload_start_offset;
-                    // size_t payload_size = jt->payload_size;
-                    
-                    start_ptr = s_buf + s_buf_length;
-                    s_buf_length += 4 + payload_size;
-
-                    memcpy(start_ptr + 4, buffer_data + nalu_index.payload_start_offset, payload_size);
-
-                    *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-                    *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-                    *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-                    *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
-
-                    auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
-                    switch (type) {
-                        case 7:
-                            previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                        case 8:
-                            previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                        case 5:
-                            previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                    }
-                    /***************************************/
-                    nalu_index.start_offset = start_offset;
+                    nalu_index.start_offset = nalu_index.payload_start_offset;
                     nalu_index.payload_start_offset = payload_start_offset;
 
                     nalu_size++;
@@ -439,7 +439,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
         // size_t start_offset = jt->start_offset;
         // size_t payload_start_offset = jt->payload_start_offset;
         // size_t payload_size = jt->payload_size;
-        payload_size = start_offset - nalu_index.payload_start_offset;
+        payload_size = start_offset - nalu_index.start_offset;
 
         start_ptr = s_buf + s_buf_length;
         s_buf_length += 4 + payload_size;
