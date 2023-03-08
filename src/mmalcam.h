@@ -114,7 +114,7 @@ static int show_error(const int *status);
 static void *mmal_camcorder(struct mmalcam_args *args);
 
 
-int start_mmalcam(struct mmalcam_args args);
+int start_mmalcam(struct mmalcam_args &args);
 
 #ifdef __cplusplus
 }

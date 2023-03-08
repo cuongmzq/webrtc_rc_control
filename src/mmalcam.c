@@ -61,7 +61,7 @@ static uint32_t sleepy_time;
 static MMAL_BOOL_T stopped_already;
 
 /*****************************************************************************/
-int start_mmalcam(struct mmalcam_args args) {
+int start_mmalcam(struct mmalcam_args &args) {
     VCOS_THREAD_ATTR_T attrs;
     VCOS_STATUS_T status;
     int result = 0;
@@ -69,7 +69,7 @@ int start_mmalcam(struct mmalcam_args args) {
     vcos_log_register("mmalcam", VCOS_LOG_CATEGORY);
     printf("MMAL Camera Test App\n");
     signal(SIGINT, signal_handler);
-    camcorder_behaviour = *args.id;
+    camcorder_behaviour = *(args.id);
 
     camcorder_behaviour.layer = VIEWFINDER_LAYER;
     // camcorder_behaviour.vformat = DEFAULT_VIDEO_FORMAT;

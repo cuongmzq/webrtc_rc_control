@@ -137,7 +137,7 @@ int main(int argc, char **argv) try {
     on_buffer_cb f = &on_mmalcam_buffer;
     cam_args.cb = &f;
 
-    std::thread mmalcam_thread(start_mmalcam, cam_args);
+    std::thread mmalcam_thread(start_mmalcam, &cam_args);
     std::thread websocket_thread(run_websocket_server);
 
     while (true) {
