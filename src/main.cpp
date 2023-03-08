@@ -106,7 +106,7 @@ int main(int argc, char **argv) try {
         } else if (key == "height") {
             video_height = value;
         } else if (key == "bitrate") {
-            video_bitrate = value;
+            
         } else if (key == "ip") {
             ip_address = value;
         } else if (key == "port") {
