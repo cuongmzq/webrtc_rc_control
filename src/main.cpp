@@ -2,6 +2,7 @@
 
 #include "helpers.hpp"
 #include "ArgParser.hpp"
+#include "dispatchqueue.hpp"
 
 #include <atomic>
 #include <chrono>
