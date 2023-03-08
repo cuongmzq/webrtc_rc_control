@@ -289,11 +289,7 @@ void addToStream(shared_ptr<Client> client, bool isAddingVideo) {
     client->setState(Client::State::Ready);
     sendInitialNalus(client->video.value(), last_frame_timestamp);
 }
-size_t start_offset = 0;
-size_t payload_start_offset = 0;
-size_t payload_size = 0;
-H264::NaluIndex nalu_index = {0, 0, 0};
-size_t nalu_size = 0;
+
 
 void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     if (pending_frame) {
@@ -308,167 +304,37 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     last_frame_duration = buffer->pts - last_frame_timestamp;
     last_frame_timestamp = buffer->pts;
 
-    // std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
+    std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
 
-    // for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
-    //     size_t start_offset = jt->start_offset;
-    //     size_t payload_start_offset = jt->payload_start_offset;
-    //     size_t payload_size = jt->payload_size;
+    for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
+        size_t start_offset = jt->start_offset;
+        size_t payload_start_offset = jt->payload_start_offset;
+        size_t payload_size = jt->payload_size;
         
-    //     start_ptr = s_buf + s_buf_length;
-    //     s_buf_length += 4 + payload_size;
-
-    //     memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
-
-    //     *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-    //     *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-    //     *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-    //     *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
-
-    //     auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
-    //     switch (type) {
-    //         case 7:
-    //             previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-    //             break;
-    //         case 8:
-    //             previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-    //             break;
-    //         case 5:
-    //             previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-    //             break;
-    //     }
-    // }
-
-    /*...............................................................*/
-    uint32_t buffer_size = buffer->length;
-    uint8_t* buffer_data = buffer->data;
-    nalu_size = 0
-
-    // struct NaluIndex {
-    // // Start index of NALU, including start sequence.
-    // size_t start_offset;
-    // // Start index of NALU payload, typically type header.
-    // size_t payload_start_offset;
-    // // Length of NALU payload, in bytes, counting from payload_start_offset.
-    // size_t payload_size;
-    // };
-
-    if (buffer_size < H264::kNaluShortStartSequenceSize)
-    {
-        // return nalu_indices;
-    }
-
-    static_assert(H264::kNaluShortStartSequenceSize >= 2,
-                  "H264::kNaluShortStartSequenceSize must be larger or equals to 2");
-    const size_t end = buffer_size - H264::kNaluShortStartSequenceSize;
-    for (size_t i = 0; i < end;)
-    {
-        if (buffer_data[i + 2] > 1)
-        {
-                i += 3;
-        }
-        else if (buffer_data[i + 2] == 1)
-        {
-                if (buffer_data[i + 1] == 0 && buffer_data[i] == 0)
-                {
-                    // We found a start sequence, now check if it was a 3 of 4 byte one.
-                    // NaluIndex index = {i, i + 3, 0};
-                    start_offset = i;
-                    payload_start_offset = i + 3;
-                    payload_size = 0;
-                    if (start_offset > 0 && buffer_data[start_offset - 1] == 0)
-                        --start_offset;
-
-                    // // Update length of previous entry.
-                    // auto it = nalu_indices.rbegin();
-                    // if (it != nalu_indices.rend())
-                    //     it->payload_size = nalu_index.start_offset - it->payload_start_offset;
-                    if (nalu_size > 0) {
-                        payload_size = start_offset - nalu_index.payload_start_offset;
-                        // nalu_index.payload_size = payload_size;
-                    }
-
-                    /****************************************/
-                    // size_t start_offset = jt->start_offset;
-                    // size_t payload_start_offset = jt->payload_start_offset;
-                    // size_t payload_size = jt->payload_size;
-                    
-                    start_ptr = s_buf + s_buf_length;
-                    s_buf_length += 4 + payload_size;
-
-                    memcpy(start_ptr + 4, buffer_data + nalu_index.payload_start_offset, payload_size);
-
-                    *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-                    *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-                    *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-                    *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
-
-                    auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
-                    switch (type) {
-                        case 7:
-                            previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                        case 8:
-                            previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                        case 5:
-                            previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-                            break;
-                    }
-                    /***************************************/
-                    nalu_index.start_offset = start_offset;
-                    nalu_index.payload_start_offset = payload_start_offset;
-
-                    nalu_size++;
-
-                    // nalu_indices.push_back(nalu_index);
-                }
-
-                i += 3;
-        }
-        else
-        {
-                ++i;
-        }
-    }
-
-    // Update length of last entry, if any.
-    // auto it = nalu_indices.rbegin();
-    if (nalu_size > 0) {
-        /****************************************/
-        // size_t start_offset = jt->start_offset;
-        // size_t payload_start_offset = jt->payload_start_offset;
-        // size_t payload_size = jt->payload_size;
-        payload_size = start_offset - nalu_index.payload_start_offset;
-
         start_ptr = s_buf + s_buf_length;
         s_buf_length += 4 + payload_size;
 
-        memcpy(start_ptr + 4, buffer_data + nalu_index.payload_start_offset, payload_size);
+        memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
 
-        *(start_ptr) = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-        *(start_ptr + 1) = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-        *(start_ptr + 2) = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-        *(start_ptr + 3) = static_cast<std::byte>((payload_size >> 0) & 0xFF);
+        *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
+        *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
+        *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
+        *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
 
-        auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t *>(start_ptr + 4)));
-        ;
-        switch (type)
-        {
-        case 7:
+        auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+        switch (type) {
+            case 7:
                 previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
                 break;
-        case 8:
+            case 8:
                 previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
                 break;
-        case 5:
+            case 5:
                 previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
                 break;
         }
-        /***************************************/
     }
 
-    /*...............................................................*/
     if (!pending_frame) {
         /** Last working copy**/
         for(auto id_client: clients) {
