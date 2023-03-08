@@ -4,6 +4,7 @@
 #include "ArgParser.hpp"
 #include "dispatchqueue.hpp"
 
+#include <string> 
 #include <atomic>
 #include <chrono>
 #include <random>
@@ -16,7 +17,7 @@
 extern "C" {
     #include "mmalcam.h"
     
-    int start_mmalcam(on_buffer_cb cb);
+    int start_mmalcam(struct mmalcam_args args);
 }
 #ifdef _WIN32
 #include <winsock2.h>
@@ -75,16 +76,30 @@ bool pending_frame = false;
 
 std::string localId;
 
+string video_width = "640";
+string video_height = "480";
+uint32_t video_bitrate = 500000;
+
 int run_websocket_server();
 
 int main(int argc, char **argv) try {
-    std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
+    struct mmalcam_args cam_args;
+    cam_args.id->layer = VIEWFINDER_LAYER;
+    cam_args.id->vformat = "" + to_string(video_width) + "x" + to_string(video_height) + ":h264"; //"1280x720:h264"
+    cam_args.id->zero_copy = 1;
+    cam_args.id->bit_rate = video_bitrate;
+    cam_args.id->focus_test = MMAL_PARAM_FOCUS_MAX;
+    cam_args.id->camera_num = DEFAULT_CAM_NUM;
+
+    cam_args.cb = &on_mmalcam_buffer;
+
+    std::thread mmalcam_thread(start_mmalcam, cam_args);
     std::thread websocket_thread(run_websocket_server);
     
     bool enableDebugLogs = false;
     bool printHelp = false;
     int c = 0;
-    auto parser = ArgParser({{"a", "audio"}, {"b", "video"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
+    auto parser = ArgParser({{"w", "audio"}, {"h", "video"}, {"b", "bitrate"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
     auto parsingResult = parser.parse(argc, argv, [](string key, string value) {
         if (key == "ip") {
             ip_address = value;

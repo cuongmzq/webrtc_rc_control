@@ -24,68 +24,35 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <stdlib.h>
-#include <limits.h>
-#include <stdio.h>
-#include <string.h>
 #include "mmalcam.h"
 
-#include "interface/mmal/mmal_logging.h"
-
-#define VIEWFINDER_LAYER 2
-#define DEFAULT_VIDEO_FORMAT "1280x720:h264";
-#define DEFAULT_BIT_RATE 5000000
-#define DEFAULT_CAM_NUM 0
-
-struct
-{
-    const char *name;
-    MMALCAM_CHANGE_T value;
-} mmalcam_change_table[] = {
-    {"image_effect", MMALCAM_CHANGE_IMAGE_EFFECT},
-    {"rotation", MMALCAM_CHANGE_ROTATION},
-    {"zoom", MMALCAM_CHANGE_ZOOM},
-    {"focus", MMALCAM_CHANGE_FOCUS},
-    {"drc", MMALCAM_CHANGE_DRC},
-    {"hdr", MMALCAM_CHANGE_HDR},
-    {"contrast", MMALCAM_CHANGE_CONTRAST},
-    {"brightness", MMALCAM_CHANGE_BRIGHTNESS},
-    {"saturation", MMALCAM_CHANGE_SATURATION},
-    {"sharpness", MMALCAM_CHANGE_SHARPNESS},
-};
-
-static int stop;
-static VCOS_THREAD_T camcorder_thread;
-static MMALCAM_BEHAVIOUR_T camcorder_behaviour;
-static uint32_t sleepy_time;
-static MMAL_BOOL_T stopped_already;
-
 /*****************************************************************************/
-int start_mmalcam(on_buffer_cb cb) {
+int start_mmalcam(struct mmalcam_args args) {
     VCOS_THREAD_ATTR_T attrs;
     VCOS_STATUS_T status;
     int result = 0;
-
     vcos_log_register("mmalcam", VCOS_LOG_CATEGORY);
     printf("MMAL Camera Test App\n");
     signal(SIGINT, signal_handler);
 
-    camcorder_behaviour.layer = VIEWFINDER_LAYER;
-    camcorder_behaviour.vformat = DEFAULT_VIDEO_FORMAT;
-    camcorder_behaviour.zero_copy = 1;
-    camcorder_behaviour.bit_rate = DEFAULT_BIT_RATE;
-    camcorder_behaviour.focus_test = MMAL_PARAM_FOCUS_MAX;
-    camcorder_behaviour.camera_num = DEFAULT_CAM_NUM;
+    camcorder_behaviour = *args.id;
+
+    // camcorder_behaviour.layer = VIEWFINDER_LAYER;
+    // camcorder_behaviour.vformat = DEFAULT_VIDEO_FORMAT;
+    // camcorder_behaviour.zero_copy = 1;
+    // camcorder_behaviour.bit_rate = DEFAULT_BIT_RATE;
+    // camcorder_behaviour.focus_test = MMAL_PARAM_FOCUS_MAX;
+    // camcorder_behaviour.camera_num = DEFAULT_CAM_NUM;
 
     status = vcos_semaphore_create(&camcorder_behaviour.init_sem, "mmalcam-init", 0);
     vcos_assert(status == VCOS_SUCCESS);
 
     vcos_thread_attr_init(&attrs);
-    struct mmalcam_args ma;
-    ma.id = &camcorder_behaviour;
-    ma.cb = cb;
+    // struct mmalcam_args ma;
+    // ma.id = &camcorder_behaviour;
+    // ma.cb = cb;
 
-    if (vcos_thread_create(&camcorder_thread, "mmal camcorder", &attrs, &mmal_camcorder, &ma) != VCOS_SUCCESS)
+    if (vcos_thread_create(&camcorder_thread, "mmal camcorder", &attrs, &mmal_camcorder, &args) != VCOS_SUCCESS)
     {
         LOG_ERROR("Thread creation failure");
         result = -2;
