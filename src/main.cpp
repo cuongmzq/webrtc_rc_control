@@ -259,7 +259,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
 
         // data holds either std::string or rtc::binary
 
-        nlohmann::json message = nlohmann::json::parse(data);
+        nlohmann::json message = nlohmann::json::parse(msg);
 
         auto it = message.find("x");
         if (it != message.end()) {
