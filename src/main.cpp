@@ -168,7 +168,6 @@ int main(int argc, char **argv) try {
 shared_ptr<ClientTrackData> addVideo(const shared_ptr<PeerConnection> pc, const uint8_t payloadType, const uint32_t ssrc, const string cname, const string msid, const function<void (void)> onOpen) {
     auto video = Description::Video(cname);
     video.addH264Codec(payloadType);
-    video.setBitrate(3000);
     video.addSSRC(ssrc, cname, msid, cname);
     auto track = pc->addTrack(video);
     // create RTP configuration
