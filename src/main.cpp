@@ -78,9 +78,6 @@ std::string localId;
 int run_websocket_server();
 
 int main(int argc, char **argv) try {
-    std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-    std::thread websocket_thread(run_websocket_server);
-    
     bool enableDebugLogs = false;
     bool printHelp = false;
     int c = 0;
@@ -123,14 +120,17 @@ int main(int argc, char **argv) try {
         InitLogger(LogLevel::Debug);
     }
 
-    while (true) {
-        string id;
-        cout << "Enter to exit" << endl;
-        cin >> id;
-        cin.ignore();
-        cout << "exiting" << endl;
-        break;
-    }
+    std::thread websocket_thread(run_websocket_server);
+    // std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
+    start_mmalcam(&on_mmalcam_buffer);
+    // while (true) {
+    //     string id;
+    //     cout << "Enter to exit" << endl;
+    //     cin >> id;
+    //     cin.ignore();
+    //     cout << "exiting" << endl;
+    //     break;
+    // }
 
     cout << "Cleaning up..." << endl;
     return 0;
