@@ -263,12 +263,12 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
 
         auto it = message.find("x");
         if (it != message.end()) {
-            auto x = it->get<std::int>();
+            auto x = it->get<int>();
             // bldc->servo(x);
         }
         auto it = message.find("y");
         if (it != message.end()) {
-            auto y = it->get<std::int>();
+            auto y = it->get<int>();
             bldc->servo(y);
         }
     });
