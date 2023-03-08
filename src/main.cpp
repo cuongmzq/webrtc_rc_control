@@ -301,15 +301,12 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
         switch (type) {
             case 7:
                 previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-                std::cout << "Found Unit::Type " << type << std::endl;
                 break;
             case 8:
                 previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-                std::cout << "Found Unit::Type " << type << std::endl;
                 break;
             case 5:
                 previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-                std::cout << "Found Unit::Type " << type << std::endl;
                 break;
         }
     }
