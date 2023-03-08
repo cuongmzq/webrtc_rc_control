@@ -75,6 +75,8 @@ bool pending_frame = false;
 
 std::string localId;
 
+int run_websocket_server();
+
 /// Incomming message handler for websocket
 /// @param message Incommint message
 /// @param config Configuration
