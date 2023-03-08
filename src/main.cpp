@@ -134,8 +134,7 @@ int main(int argc, char **argv) try {
     struct mmalcam_args cam_args;
     cam_args.id->vformat = ("" + video_width + "x" + video_height + ":h264").c_str(); //"1280x720:h264"
     cam_args.id->bit_rate = video_bitrate;
-    on_buffer_cb f = &on_mmalcam_buffer;
-    cam_args.cb = &f;
+    cam_args.cb = &on_mmalcam_buffer;
 
     std::thread mmalcam_thread(start_mmalcam, &cam_args);
     std::thread websocket_thread(run_websocket_server);
