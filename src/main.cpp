@@ -106,7 +106,7 @@ void wsOnMessage(json message, Configuration config, shared_ptr<WebSocket> ws) {
 
 int main(int argc, char **argv) try {
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-    std::thread mmalcam_thread(run_websocket_server);
+    std::thread websocket_thread(run_websocket_server);
     
     bool enableDebugLogs = false;
     bool printHelp = false;
