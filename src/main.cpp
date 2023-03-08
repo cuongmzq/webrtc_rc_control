@@ -85,7 +85,7 @@ int run_websocket_server();
 int main(int argc, char **argv) try {
     struct mmalcam_args cam_args;
     cam_args.id->layer = VIEWFINDER_LAYER;
-    cam_args.id->vformat = "" + to_string(video_width) + "x" + to_string(video_height) + ":h264"; //"1280x720:h264"
+    cam_args.id->vformat = "" + video_width + "x" + video_height + ":h264"; //"1280x720:h264"
     cam_args.id->zero_copy = 1;
     cam_args.id->bit_rate = video_bitrate;
     cam_args.id->focus_test = MMAL_PARAM_FOCUS_MAX;
