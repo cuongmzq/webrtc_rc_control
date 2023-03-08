@@ -342,7 +342,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     /*...............................................................*/
     uint32_t buffer_size = buffer->length;
     uint8_t* buffer_data = buffer->data;
-    nalu_size = 0;
+    nalu_size = 0
 
     // struct NaluIndex {
     // // Start index of NALU, including start sequence.
