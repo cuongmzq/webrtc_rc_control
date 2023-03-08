@@ -62,7 +62,7 @@ void sendInitialNalus(shared_ptr<ClientTrackData> video, uint32_t timestamp);
 uint32_t last_frame_timestamp = 0;
 uint32_t last_frame_duration = 0;
 
-std::byte* s_buf = static_cast<std::byte*>(malloc(100000));
+std::byte* s_buf = static_cast<std::byte*>(malloc(65554));
 size_t s_buf_length = 0;
 size_t s_data_length = 0;
 
