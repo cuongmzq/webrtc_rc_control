@@ -199,7 +199,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
     auto pc = make_shared<PeerConnection>(config);
     auto client = make_shared<Client>(pc);
 
-    pc->onStateChange([&bldc, id](PeerConnection::State state) {
+    pc->onStateChange([id](PeerConnection::State state) {
         cout << "State: " << state << endl;
         if (state == PeerConnection::State::Disconnected ||
             state == PeerConnection::State::Failed ||
@@ -248,7 +248,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
         // }
     });
 
-    dc->onMessage(nullptr, [id, &bldc, wdc = make_weak_ptr(dc)](string msg) {
+    dc->onMessage(nullptr, [id, wdc = make_weak_ptr(dc)](string msg) {
         /*
             {x: 100,y:100}
         */
@@ -266,7 +266,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
             auto x = it->get<int>();
             // bldc->servo(x);
         }
-        auto it = message.find("y");
+        it = message.find("y");
         if (it != message.end()) {
             auto y = it->get<int>();
             bldc->servo(y);
