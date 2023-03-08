@@ -77,33 +77,6 @@ std::string localId;
 
 int run_websocket_server();
 
-/// Incomming message handler for websocket
-/// @param message Incommint message
-/// @param config Configuration
-/// @param ws Websocket
-void wsOnMessage(json message, Configuration config, shared_ptr<WebSocket> ws) {
-    auto it = message.find("id");
-    if (it == message.end())
-        return;
-    string id = it->get<string>();
-
-    it = message.find("type");
-    if (it == message.end())
-        return;
-    string type = it->get<string>();
-
-    if (type == "request") {
-        clients.emplace(id, createPeerConnection(config, make_weak_ptr(ws), id));
-    } else if (type == "answer") {
-        if (auto jt = clients.find(id); jt != clients.end()) {
-            auto pc = jt->second->peerConnection;
-            auto sdp = message["sdp"].get<string>();
-            auto description = Description(sdp, type);
-            pc->setRemoteDescription(description);
-        }
-    }
-}
-
 int main(int argc, char **argv) try {
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
     std::thread websocket_thread(run_websocket_server);
