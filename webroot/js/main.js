@@ -50,3 +50,59 @@ _connectButton.onclick = () => {
 _disconnectButton.onclick = () => {
     stop();
 };
+
+let data = {
+    x: 0,
+    y: 0
+}
+let intervalSendDC = null;
+
+intervalSendDC = setInterval(() => {
+    if (dc) {
+        dc.send(JSON.stringify(data));
+    }
+}, 50);
+
+let timer = null;
+
+let onK = () => {
+    data.x = 0;
+    data.y = 0;
+    clearTimeout(timer);
+    timer = null;
+}
+
+// Add event listener on keydown
+document.addEventListener('keydown', (event) => {
+    var name = event.key;
+    var code = event.code;
+    // Alert the key name and key code on keydown
+    console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
+    if (dc) {
+        switch(code) {
+            case "KeyW":
+                data.y = 1660;
+                break;    
+            case "KeyS":
+                data.y = 1450;
+                break;
+        }
+    }
+    
+  }, false);
+
+  // Add event listener on keydown
+document.addEventListener('keyup', (event) => {
+    var name = event.key;
+    var code = event.code;
+    // Alert the key name and key code on keydown
+    console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
+    if (dc) {
+        switch(code) {
+            case "KeyW":
+                data.y = 1500;
+                break;
+        }
+    }
+    
+  }, false);
