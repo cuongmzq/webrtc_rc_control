@@ -252,7 +252,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
         }
     });
     client->dataChannel = dc;
-
+    clients.emplace(id, client);
     pc->setLocalDescription();
     return client;
 };
