@@ -999,6 +999,70 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
         // Continue rather than abort..
     }
 
+    MMAL_PARAMETER_UINT32_T param = {
+        {MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, INTRAPERIOD};
+    status = mmal_port_parameter_set(encoder_output, &param.hdr);
+    if (status != MMAL_SUCCESS) {
+        vcos_log_error("Unable to set intraperiod");
+        goto error;
+    }
+
+    
+    MMAL_PARAMETER_UINT32_T param = {
+        {MMAL_PARAMETER_VIDEO_ENCODE_INITIAL_QUANT, sizeof(param)},
+        QUANTISATION_PARAMETER};
+    status = mmal_port_parameter_set(encoder_output, &param.hdr);
+    if (status != MMAL_SUCCESS) {
+        vcos_log_error("Unable to set initial QP");
+        goto error;
+    }
+
+    MMAL_PARAMETER_UINT32_T param2 = {
+        {MMAL_PARAMETER_VIDEO_ENCODE_MIN_QUANT, sizeof(param)},
+        QUANTISATION_PARAMETER};
+    status = mmal_port_parameter_set(encoder_output, &param2.hdr);
+    if (status != MMAL_SUCCESS) {
+        vcos_log_error("Unable to set min QP");
+        goto error;
+    }
+
+    MMAL_PARAMETER_UINT32_T param3 = {
+        {MMAL_PARAMETER_VIDEO_ENCODE_MAX_QUANT, sizeof(param)},
+        QUANTISATION_PARAMETER};
+    status = mmal_port_parameter_set(encoder_output, &param3.hdr);
+    if (status != MMAL_SUCCESS) {
+        vcos_log_error("Unable to set max QP");
+        goto error;
+    }
+
+    MMAL_PARAMETER_VIDEO_PROFILE_T  param;
+    param.hdr.id = MMAL_PARAMETER_PROFILE;
+    param.hdr.size = sizeof(param);
+
+    param.profile[0].profile = MMAL_VIDEO_PROFILE_H264_HIGH;
+
+    param.profile[0].level = MMAL_VIDEO_LEVEL_H264_42;
+
+    status = mmal_port_parameter_set(encoder_output, &param.hdr);
+    if (status != MMAL_SUCCESS)
+    {
+        vcos_log_error("Unable to set H264 profile");
+        goto error;
+    }
+
+    //set INLINE VECTORS flag to request motion vector estimates
+    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_INLINE_VECTORS, 0) != MMAL_SUCCESS)
+    {
+        vcos_log_error("failed to set INLINE VECTORS parameters");
+        // Continue rather than abort..
+    }
+
+   if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, IMMUTABLE_OUTPUT) != MMAL_SUCCESS)
+   {
+      vcos_log_error("Unable to set immutable input flag");
+      // Continue rather than abort..
+   }
+
    /* Enable component */
    *status = mmal_component_enable(encoder);
    if(*status)
