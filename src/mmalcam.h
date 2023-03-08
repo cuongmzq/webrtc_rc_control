@@ -106,7 +106,7 @@ typedef void (*on_buffer_cb)(MMAL_BUFFER_HEADER_T*);
 struct mmalcam_args
 {
     MMALCAM_BEHAVIOUR_T *id;
-    on_buffer_cb cb;
+    on_buffer_cb *cb;
 };
 
 static int show_error(const int *status);
@@ -114,7 +114,7 @@ static int show_error(const int *status);
 static void *mmal_camcorder(struct mmalcam_args *args);
 
 
-int start_mmalcam(struct mmalcam_args *args);
+int start_mmalcam(on_buffer_cb cb);
 
 #ifdef __cplusplus
 }

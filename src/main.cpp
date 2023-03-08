@@ -4,7 +4,6 @@
 #include "ArgParser.hpp"
 #include "dispatchqueue.hpp"
 
-#include <string> 
 #include <atomic>
 #include <chrono>
 #include <random>
@@ -17,7 +16,7 @@
 extern "C" {
     #include "mmalcam.h"
     
-    int start_mmalcam(struct mmalcam_args *args);
+    int start_mmalcam(on_buffer_cb cb);
 }
 #ifdef _WIN32
 #include <winsock2.h>
@@ -76,25 +75,18 @@ bool pending_frame = false;
 
 std::string localId;
 
-string video_width = "640";
-string video_height = "480";
-uint32_t video_bitrate = 500000;
-
 int run_websocket_server();
 
 int main(int argc, char **argv) try {
+    std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
+    std::thread websocket_thread(run_websocket_server);
+    
     bool enableDebugLogs = false;
     bool printHelp = false;
     int c = 0;
-    auto parser = ArgParser({{"w", "width"}, {"h", "height"}, {"b", "bitrate"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
+    auto parser = ArgParser({{"a", "audio"}, {"b", "video"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
     auto parsingResult = parser.parse(argc, argv, [](string key, string value) {
-        if (key == "width") {
-            video_width = value;
-        } else if (key == "height") {
-            video_height = value;
-        } else if (key == "bitrate") {
-            
-        } else if (key == "ip") {
+        if (key == "ip") {
             ip_address = value;
         } else if (key == "port") {
             port = atoi(value.data());
@@ -130,16 +122,6 @@ int main(int argc, char **argv) try {
     if (enableDebugLogs) {
         InitLogger(LogLevel::Debug);
     }
-
-    struct mmalcam_args cam_args;
-    cam_args.id->vformat = ("" + video_width + "x" + video_height + ":h264").c_str(); //"1280x720:h264"
-    cam_args.id->bit_rate = video_bitrate;
-    cam_args.cb = &on_mmalcam_buffer;
-    std::cout << "create args" << std::endl;
-    std::thread mmalcam_thread(start_mmalcam, &cam_args);
-
-    std::thread websocket_thread(run_websocket_server);
-    std::cout << "create done" << std::endl;
 
     while (true) {
         string id;

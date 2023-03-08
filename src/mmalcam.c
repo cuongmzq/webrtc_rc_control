@@ -61,7 +61,7 @@ static uint32_t sleepy_time;
 static MMAL_BOOL_T stopped_already;
 
 /*****************************************************************************/
-int start_mmalcam(struct mmalcam_args *args) {
+int start_mmalcam(on_buffer_cb cb) {
     VCOS_THREAD_ATTR_T attrs;
     VCOS_STATUS_T status;
     int result = 0;
@@ -71,9 +71,9 @@ int start_mmalcam(struct mmalcam_args *args) {
     signal(SIGINT, signal_handler);
 
     camcorder_behaviour.layer = VIEWFINDER_LAYER;
-    camcorder_behaviour.vformat = args->id->vformat;
+    camcorder_behaviour.vformat = DEFAULT_VIDEO_FORMAT;
     camcorder_behaviour.zero_copy = 1;
-    camcorder_behaviour.bit_rate = args->id->bit_rate;
+    camcorder_behaviour.bit_rate = DEFAULT_BIT_RATE;
     camcorder_behaviour.focus_test = MMAL_PARAM_FOCUS_MAX;
     camcorder_behaviour.camera_num = DEFAULT_CAM_NUM;
 
@@ -81,8 +81,11 @@ int start_mmalcam(struct mmalcam_args *args) {
     vcos_assert(status == VCOS_SUCCESS);
 
     vcos_thread_attr_init(&attrs);
+    struct mmalcam_args ma;
+    ma.id = &camcorder_behaviour;
+    ma.cb = cb;
 
-    if (vcos_thread_create(&camcorder_thread, "mmal camcorder", &attrs, &mmal_camcorder, &args) != VCOS_SUCCESS)
+    if (vcos_thread_create(&camcorder_thread, "mmal camcorder", &attrs, &mmal_camcorder, &ma) != VCOS_SUCCESS)
     {
         LOG_ERROR("Thread creation failure");
         result = -2;
