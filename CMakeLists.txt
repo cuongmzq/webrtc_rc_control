@@ -12,6 +12,9 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(pgpio REQUIRED) # FOO_INCLUDE_DIR, FOO_LIBRARIES
+
 set(SOURCE_LIST
 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/viewfinder.c
@@ -31,4 +34,4 @@ set(LIBRARY_LIST
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(main ${SOURCE_LIST})
-target_link_libraries(main PRIVATE ${LIBRARY_LIST} Threads::Threads)
+target_link_libraries(main PRIVATE ${LIBRARY_LIST} Threads::Threads pigpio)

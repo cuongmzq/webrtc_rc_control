@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "ArgParser.hpp"
 #include "dispatchqueue.hpp"
-
+#include <pigpio.h>
 #include <atomic>
 #include <chrono>
 #include <random>
@@ -121,6 +121,10 @@ int main(int argc, char **argv) try {
     }
 
     std::thread websocket_thread(run_websocket_server);
+    if (gpioInitialise() >= 0) {
+        
+    } 
+
     // std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
     start_mmalcam(&on_mmalcam_buffer);
     // while (true) {
