@@ -41,35 +41,6 @@ extern "C" {
 
 #include "interface/mmal/mmal_logging.h"
 
-#define VIEWFINDER_LAYER 2
-#define DEFAULT_VIDEO_FORMAT "1280x720:h264";
-#define DEFAULT_BIT_RATE 5000000
-#define DEFAULT_CAM_NUM 0
-
-struct
-{
-    const char *name;
-    MMALCAM_CHANGE_T value;
-} mmalcam_change_table[] = {
-    {"image_effect", MMALCAM_CHANGE_IMAGE_EFFECT},
-    {"rotation", MMALCAM_CHANGE_ROTATION},
-    {"zoom", MMALCAM_CHANGE_ZOOM},
-    {"focus", MMALCAM_CHANGE_FOCUS},
-    {"drc", MMALCAM_CHANGE_DRC},
-    {"hdr", MMALCAM_CHANGE_HDR},
-    {"contrast", MMALCAM_CHANGE_CONTRAST},
-    {"brightness", MMALCAM_CHANGE_BRIGHTNESS},
-    {"saturation", MMALCAM_CHANGE_SATURATION},
-    {"sharpness", MMALCAM_CHANGE_SHARPNESS},
-};
-
-static int stop;
-static VCOS_THREAD_T camcorder_thread;
-static MMALCAM_BEHAVIOUR_T camcorder_behaviour;
-static uint32_t sleepy_time;
-static MMAL_BOOL_T stopped_already;
-
-
 extern VCOS_LOG_CAT_T mmalcam_log_category;
 
 typedef enum
@@ -135,6 +106,34 @@ typedef struct MMALCAM_BEHAVIOUR_T
 // /* Utility functions used by test program */
 static void signal_handler(int signum);
 static void mmalcam_dump_stats(const char *title, MMAL_PARAMETER_STATISTICS_T *stats);
+
+#define VIEWFINDER_LAYER 2
+#define DEFAULT_VIDEO_FORMAT "1280x720:h264";
+#define DEFAULT_BIT_RATE 5000000
+#define DEFAULT_CAM_NUM 0
+
+struct
+{
+    const char *name;
+    MMALCAM_CHANGE_T value;
+} mmalcam_change_table[] = {
+    {"image_effect", MMALCAM_CHANGE_IMAGE_EFFECT},
+    {"rotation", MMALCAM_CHANGE_ROTATION},
+    {"zoom", MMALCAM_CHANGE_ZOOM},
+    {"focus", MMALCAM_CHANGE_FOCUS},
+    {"drc", MMALCAM_CHANGE_DRC},
+    {"hdr", MMALCAM_CHANGE_HDR},
+    {"contrast", MMALCAM_CHANGE_CONTRAST},
+    {"brightness", MMALCAM_CHANGE_BRIGHTNESS},
+    {"saturation", MMALCAM_CHANGE_SATURATION},
+    {"sharpness", MMALCAM_CHANGE_SHARPNESS},
+};
+
+static int stop;
+static VCOS_THREAD_T camcorder_thread;
+static MMALCAM_BEHAVIOUR_T camcorder_behaviour;
+static uint32_t sleepy_time;
+static MMAL_BOOL_T stopped_already;
 
 /* ...*/
 typedef void (*on_buffer_cb)(MMAL_BUFFER_HEADER_T*);
