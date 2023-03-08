@@ -91,7 +91,7 @@ class GPIO {
         return gpioServo(_pin, pwm);
     }
     
-}
+};
 
 GPIO *bldc;
 
