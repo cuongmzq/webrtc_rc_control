@@ -84,8 +84,6 @@ class GPIO {
     GPIO(int pin) {
         _pin = pin;
         gpioSetMode(pin, PI_OUTPUT);
-        // gpioSetPWMrange(pin, 1000, 2000);
-        // gpioPWM(pin, )
     }
 
     ~GPIO() {}
@@ -160,15 +158,7 @@ int main(int argc, char **argv) try {
         }
         cin.ignore();
     }
-    // start_mmalcam(&on_mmalcam_buffer);
-    // while (true) {
-    //     string id;
-    //     cout << "Enter to exit" << endl;
-    //     cin >> id;
-    //     cin.ignore();
-    //     cout << "exiting" << endl;
-    //     break;
-    // }
+
     cout << "Cleaning up..." << endl;
     gpioTerminate();
     return 0;
@@ -209,7 +199,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
     auto pc = make_shared<PeerConnection>(config);
     auto client = make_shared<Client>(pc);
 
-    pc->onStateChange([id](PeerConnection::State state) {
+    pc->onStateChange([&bldc, id](PeerConnection::State state) {
         cout << "State: " << state << endl;
         if (state == PeerConnection::State::Disconnected ||
             state == PeerConnection::State::Failed ||
@@ -218,6 +208,8 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
             MainThread.dispatch([id]() {
                 clients.erase(id);
             });
+
+            bldc->servo(1500);
         }
     });
 
@@ -256,11 +248,29 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
         // }
     });
 
-    dc->onMessage(nullptr, [id, wdc = make_weak_ptr(dc)](string msg) {
+    dc->onMessage(nullptr, [id, &bldc, wdc = make_weak_ptr(dc)](string msg) {
+        /*
+            {x: 100,y:100}
+        */
         // cout << "Message from " << id << " received: " << msg << endl;
         // if (auto dc = wdc.lock()) {
         //     dc->send("Ping");
         // }
+
+        // data holds either std::string or rtc::binary
+
+        nlohmann::json message = nlohmann::json::parse(data);
+
+        auto it = message.find("x");
+        if (it != message.end()) {
+            auto x = it->get<std::int>();
+            // bldc->servo(x);
+        }
+        auto it = message.find("y");
+        if (it != message.end()) {
+            auto y = it->get<std::int>();
+            bldc->servo(y);
+        }
     });
     client->dataChannel = dc;
     clients.emplace(id, client);
