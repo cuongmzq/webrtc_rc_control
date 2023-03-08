@@ -16,17 +16,18 @@
 namespace H264 {
 
 const uint8_t kNaluTypeMask = 0x1F;
-
+std::vector<NaluIndex> nalu_indices;
 std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
                                        size_t buffer_size) {
   // This is sorta like Boyer-Moore, but with only the first optimization step:
   // given a 3-byte sequence we're looking at, if the 3rd byte isn't 1 or 0,
   // skip ahead to the next 3-byte sequence. 0s and 1s are relatively rare, so
   // this will skip the majority of reads/checks.
-  std::vector<NaluIndex> sequences;
-  if (buffer_size < kNaluShortStartSequenceSize)
-    return sequences;
+  if (buffer_size < kNaluShortStartSequenceSize) {
+    return nalu_indices;
+  }
 
+    nalu_indices.clear();
   static_assert(kNaluShortStartSequenceSize >= 2,
                 "kNaluShortStartSequenceSize must be larger or equals to 2");
   const size_t end = buffer_size - kNaluShortStartSequenceSize;
@@ -41,11 +42,11 @@ std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
           --index.start_offset;
 
         // Update length of previous entry.
-        auto it = sequences.rbegin();
-        if (it != sequences.rend())
+        auto it = nalu_indices.rbegin();
+        if (it != nalu_indices.rend())
           it->payload_size = index.start_offset - it->payload_start_offset;
 
-        sequences.push_back(index);
+        nalu_indices.push_back(index);
       }
 
       i += 3;
@@ -55,11 +56,11 @@ std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
   }
 
   // Update length of last entry, if any.
-  auto it = sequences.rbegin();
-  if (it != sequences.rend())
+  auto it = nalu_indices.rbegin();
+  if (it != nalu_indices.rend())
     it->payload_size = buffer_size - it->payload_start_offset;
 
-  return sequences;
+  return nalu_indices;
 }
 
 NaluType ParseNaluType(uint8_t data) {
