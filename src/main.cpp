@@ -213,16 +213,16 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
 
     auto dc = pc->createDataChannel("ping-pong");
     dc->onOpen([id, wdc = make_weak_ptr(dc)]() {
-        if (auto dc = wdc.lock()) {
-            dc->send("Ping");
-        }
+        // if (auto dc = wdc.lock()) {
+        //     dc->send("Ping");
+        // }
     });
 
     dc->onMessage(nullptr, [id, wdc = make_weak_ptr(dc)](string msg) {
-        cout << "Message from " << id << " received: " << msg << endl;
-        if (auto dc = wdc.lock()) {
-            dc->send("Ping");
-        }
+        // cout << "Message from " << id << " received: " << msg << endl;
+        // if (auto dc = wdc.lock()) {
+        //     dc->send("Ping");
+        // }
     });
     client->dataChannel = dc;
     clients.emplace(id, client);
