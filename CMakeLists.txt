@@ -18,6 +18,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/viewfinder.c
 ${CMAKE_CURRENT_SOURCE_DIR}/src/mmalcam.c
 ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/h264_common.cc
+${CMAKE_CURRENT_SOURCE_DIR}/src/dispatchqueue.cpp
 ${CMAKE_CURRENT_SOURCE_DIR}/src/ArgParser.cpp)
 
 set(LIBRARY_LIST
