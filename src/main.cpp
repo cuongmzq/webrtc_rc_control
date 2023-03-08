@@ -73,6 +73,8 @@ std::byte* start_ptr;
 
 bool pending_frame = false;
 
+std::string localId;
+
 /// Incomming message handler for websocket
 /// @param message Incommint message
 /// @param config Configuration
@@ -102,7 +104,8 @@ void wsOnMessage(json message, Configuration config, shared_ptr<WebSocket> ws) {
 
 int main(int argc, char **argv) try {
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-
+    std::thread mmalcam_thread(run_websocket_server);
+    
     bool enableDebugLogs = false;
     bool printHelp = false;
     int c = 0;
@@ -371,4 +374,104 @@ void sendInitialNalus(shared_ptr<ClientTrackData> video, uint32_t timestamp) {
         video->sender->rtpConfig->timestamp += frameTimestampDuration;
         video->track->send(initialNalus);
     }
+}
+
+// Helper function to generate a random ID
+std::string randomId(size_t length) {
+	using std::chrono::high_resolution_clock;
+	static thread_local std::mt19937 rng(
+	    static_cast<unsigned int>(high_resolution_clock::now().time_since_epoch().count()));
+	static const std::string characters(
+	    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	std::string id(length, '0');
+	std::uniform_int_distribution<int> uniform(0, int(characters.size() - 1));
+	std::generate(id.begin(), id.end(), [&]() { return characters.at(uniform(rng)); });
+	return id;
+}
+
+int run_websocket_server() {
+	rtc::Configuration config;
+    config.disableAutoNegotiation = true;
+
+	localId = randomId(4);
+	std::cout << "The local ID is " << localId << std::endl;
+
+    rtc::WebSocketServer::Configuration serverConfig;
+    serverConfig.port = port;
+    serverConfig.enableTls = false;
+
+    rtc::WebSocketServer server(std::move(serverConfig));
+
+    std::shared_ptr<rtc::WebSocket> client;
+    server.onClient([&config, &client](std::shared_ptr<rtc::WebSocket> incoming) {
+		std::cout << "WebSocketServer: Client connection received" << std::endl;
+		client = incoming;
+
+		if(auto addr = client->remoteAddress())
+			std::cout << "WebSocketServer: Client remote address is " << *addr << std::endl;
+
+		client->onOpen([wclient = make_weak_ptr(client)]() {
+			std::cout << "WebSocketServer: Client connection open" << std::endl;
+			if(auto client = wclient.lock())
+				if(auto path = client->path())
+					std::cout << "WebSocketServer: Requested path is " << *path << std::endl;
+		});
+
+		client->onClosed([]() {
+			std::cout << "WebSocketServer: Client connection closed" << std::endl;
+		});
+
+		client->onMessage([&config, wclient = make_weak_ptr(client)](std::variant<rtc::binary, std::string> data) {
+            if (auto client = wclient.lock()) {
+                // data holds either std::string or rtc::binary
+                if (!std::holds_alternative<std::string>(data))
+                    return;
+
+                nlohmann::json message = nlohmann::json::parse(std::get<std::string>(data));
+
+                auto it = message.find("id");
+                if (it == message.end())
+                    return;
+
+                auto id = it->get<std::string>();
+
+                it = message.find("type");
+                if (it == message.end())
+                    return;
+
+                auto type = it->get<std::string>();
+
+                std::shared_ptr<rtc::PeerConnection> pc;
+                if (auto jt = clients.find(id); jt != clients.end()) {
+                    pc = jt->second->peerConnection;
+                    std::cout << "Found PC in clients" << std::endl;
+                } else if (type == "offer") {
+                    std::cout << "Answering to " + id << std::endl;
+                    pc = (createPeerConnection(config, wclient, id))->peerConnection;
+                } else if (type == "request") {
+                    std::cout << "Offer to " + id << std::endl;
+                    pc = (createPeerConnection(config, wclient, id))->peerConnection;
+                }
+
+                if (type == "offer" || type == "answer") {
+                    auto sdp = message["sdp"].get<std::string>();
+                    pc->setRemoteDescription(rtc::Description(sdp, type));
+                    std::cout << type << " from " << id << " \n" << sdp << std::endl;
+                } else if (type == "candidate") {
+                    auto sdp = message["candidate"].get<std::string>();
+                    auto mid = message["mid"].get<std::string>();
+                    std::cout << "Candiate start" << std::endl;
+
+                    pc->addRemoteCandidate(rtc::Candidate(sdp, mid));
+                    std::cout << "Candiate complete" << std::endl;
+                    
+                }
+            }
+		});
+    });
+    while (true) {
+	    std::this_thread::sleep_for(1s);
+    }
+
+	std::cout << "Success" << std::endl;
 }
