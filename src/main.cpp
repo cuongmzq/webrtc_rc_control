@@ -93,7 +93,7 @@ class GPIO {
     
 }
 
-GPIO bldc;
+GPIO *bldc;
 
 int main(int argc, char **argv) try {
     bool enableDebugLogs = false;
@@ -141,8 +141,8 @@ int main(int argc, char **argv) try {
     std::thread websocket_thread(run_websocket_server);
     if (gpioInitialise() >= 0) {
         std::cout << "GPIO working" << std::endl;
-        bldc = GPIO(12);
-        bldc.servo(1500);
+        bldc = new GPIO(12);
+        bldc->servo(1500);
     } 
 
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
