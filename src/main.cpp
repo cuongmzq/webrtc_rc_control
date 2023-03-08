@@ -133,9 +133,7 @@ int main(int argc, char **argv) try {
 
     struct mmalcam_args cam_args;
     cam_args.id->vformat = ("" + video_width + "x" + video_height + ":h264").c_str(); //"1280x720:h264"
-    cam_args.id->zero_copy = 1;
     cam_args.id->bit_rate = video_bitrate;
-    cam_args.id->focus_test = MMAL_PARAM_FOCUS_MAX;
     on_buffer_cb f = &on_mmalcam_buffer;
     cam_args.cb = &f;
 
