@@ -17,7 +17,7 @@
 extern "C" {
     #include "mmalcam.h"
     
-    int start_mmalcam(struct mmalcam_args args);
+    int start_mmalcam(struct mmalcam_args *args);
 }
 #ifdef _WIN32
 #include <winsock2.h>
