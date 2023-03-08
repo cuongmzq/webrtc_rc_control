@@ -94,7 +94,7 @@ class GPIO {
     
 };
 
-GPIO *bldc;
+GPIO *bldc, *steer;
 
 int main(int argc, char **argv) try {
     bool enableDebugLogs = false;
@@ -144,6 +144,9 @@ int main(int argc, char **argv) try {
         std::cout << "GPIO working" << std::endl;
         bldc = new GPIO(12);
         bldc->servo(1500);
+
+        steer = new GPIO(13);
+        steer->servo(1500);
     } 
 
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
@@ -264,7 +267,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
         auto it = message.find("x");
         if (it != message.end()) {
             auto x = it->get<int>();
-            // bldc->servo(x);
+            steer->servo(x);
         }
         it = message.find("y");
         if (it != message.end()) {
