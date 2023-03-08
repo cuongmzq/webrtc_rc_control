@@ -91,7 +91,7 @@ class GPIO {
     ~GPIO() {}
 
     int servo(int pwm) {
-        return gpioGetServoPulsewidth(_pin, pwm);
+        return gpioServo(_pin, pwm);
     }
     
 };
