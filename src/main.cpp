@@ -122,7 +122,7 @@ int main(int argc, char **argv) try {
 
     std::thread websocket_thread(run_websocket_server);
     if (gpioInitialise() >= 0) {
-        
+
     } 
 
     // std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
@@ -135,8 +135,8 @@ int main(int argc, char **argv) try {
     //     cout << "exiting" << endl;
     //     break;
     // }
-
     cout << "Cleaning up..." << endl;
+    gpioTerminate();
     return 0;
 
 } catch (const std::exception &e) {
