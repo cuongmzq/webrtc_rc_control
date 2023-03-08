@@ -82,13 +82,16 @@ class GPIO {
     int _pin = 0;
     public:
     GPIO(int pin) {
+        _pin = pin;
         gpioSetMode(pin, PI_OUTPUT);
+        // gpioSetPWMrange(pin, 1000, 2000);
+        // gpioPWM(pin, )
     }
 
     ~GPIO() {}
 
     int servo(int pwm) {
-        return gpioServo(_pin, pwm);
+        return gpioGetServoPulsewidth(_pin, pwm);
     }
     
 };
@@ -153,7 +156,9 @@ int main(int argc, char **argv) try {
             bldc->servo(pwm);
         } else {
             std::cout << "Wrong data" << std::endl;
+            pwm = 1500;
         }
+        cin.ignore();
     }
     // start_mmalcam(&on_mmalcam_buffer);
     // while (true) {
