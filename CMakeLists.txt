@@ -14,7 +14,7 @@ find_package(Threads REQUIRED)
 
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake")
-find_package(pgpio REQUIRED) # FOO_INCLUDE_DIR, FOO_LIBRARIES
+find_package(pigpio REQUIRED) # FOO_INCLUDE_DIR, FOO_LIBRARIES
 
 set(SOURCE_LIST
 ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
