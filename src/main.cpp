@@ -91,7 +91,7 @@ int main(int argc, char **argv) try {
     cam_args.id->focus_test = MMAL_PARAM_FOCUS_MAX;
     cam_args.id->camera_num = DEFAULT_CAM_NUM;
 
-    cam_args.cb = &on_mmalcam_buffer;
+    cam_args.cb = on_mmalcam_buffer;
 
     std::thread mmalcam_thread(start_mmalcam, cam_args);
     std::thread websocket_thread(run_websocket_server);
