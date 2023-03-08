@@ -150,7 +150,7 @@ int main(int argc, char **argv) try {
     while(true) {
         cin >> pwm;
         if (pwm >= 1000 && pwm <= 2000) {
-            bldc.servo(pwm);
+            bldc->servo(pwm);
         } else {
             std::cout << "Wrong data" << std::endl;
         }
