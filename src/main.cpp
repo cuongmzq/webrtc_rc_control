@@ -17,7 +17,7 @@
 extern "C" {
     #include "mmalcam.h"
     
-    int start_mmalcam(struct mmalcam_args args);
+    int start_mmalcam(struct mmalcam_args &args);
 }
 #ifdef _WIN32
 #include <winsock2.h>
@@ -84,16 +84,14 @@ int run_websocket_server();
 
 int main(int argc, char **argv) try {
     struct mmalcam_args cam_args;
-    cam_args.id->layer = VIEWFINDER_LAYER;
     cam_args.id->vformat = ("" + video_width + "x" + video_height + ":h264").c_str(); //"1280x720:h264"
     cam_args.id->zero_copy = 1;
     cam_args.id->bit_rate = video_bitrate;
     cam_args.id->focus_test = MMAL_PARAM_FOCUS_MAX;
-    cam_args.id->camera_num = DEFAULT_CAM_NUM;
     on_buffer_cb f = &on_mmalcam_buffer;
     cam_args.cb = &f;
 
-    std::thread mmalcam_thread(start_mmalcam, cam_args);
+    std::thread mmalcam_thread(start_mmalcam, &cam_args);
     std::thread websocket_thread(run_websocket_server);
     
     bool enableDebugLogs = false;
