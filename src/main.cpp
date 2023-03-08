@@ -107,11 +107,7 @@ int main(int argc, char **argv) try {
     int c = 0;
     auto parser = ArgParser({{"a", "audio"}, {"b", "video"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
     auto parsingResult = parser.parse(argc, argv, [](string key, string value) {
-        if (key == "audio") {
-            opusSamplesDirectory = value + "/";
-        } else if (key == "video") {
-            h264SamplesDirectory = value + "/";
-        } else if (key == "ip") {
+        if (key == "ip") {
             ip_address = value;
         } else if (key == "port") {
             port = atoi(value.data());
