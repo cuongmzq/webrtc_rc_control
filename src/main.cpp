@@ -77,6 +77,24 @@ std::string localId;
 
 int run_websocket_server();
 
+class GPIO {
+    private:
+    int _pin = 0;
+    public:
+    GPIO(int pin) {
+        gpioSetMode(pin, PI_OUTPUT);
+    }
+
+    ~GPIO() {}
+
+    int servo(int pwm) {
+        return gpioServo(_pin, pwm);
+    }
+    
+}
+
+GPIO bldc;
+
 int main(int argc, char **argv) try {
     bool enableDebugLogs = false;
     bool printHelp = false;
@@ -122,11 +140,22 @@ int main(int argc, char **argv) try {
 
     std::thread websocket_thread(run_websocket_server);
     if (gpioInitialise() >= 0) {
-
+        std::cout << "GPIO working" << std::endl;
+        bldc = GPIO(12);
+        bldc.servo(1500);
     } 
 
-    // std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-    start_mmalcam(&on_mmalcam_buffer);
+    std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
+    int pwm = 1500;
+    while(true) {
+        cin >> pwm;
+        if (pwm >= 1000 && pwm <= 2000) {
+            bldc.servo(pwm);
+        } else {
+            std::cout << "Wrong data" << std::endl;
+        }
+    }
+    // start_mmalcam(&on_mmalcam_buffer);
     // while (true) {
     //     string id;
     //     cout << "Enter to exit" << endl;
