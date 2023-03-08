@@ -99,9 +99,15 @@ int main(int argc, char **argv) try {
     bool enableDebugLogs = false;
     bool printHelp = false;
     int c = 0;
-    auto parser = ArgParser({{"w", "audio"}, {"h", "video"}, {"b", "bitrate"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
+    auto parser = ArgParser({{"w", "width"}, {"h", "height"}, {"b", "bitrate"}, {"d", "ip"}, {"p","port"}}, {{"h", "help"}, {"v", "verbose"}});
     auto parsingResult = parser.parse(argc, argv, [](string key, string value) {
-        if (key == "ip") {
+        if (key == "width") {
+            video_width = value;
+        } else if (key == "height") {
+            video_height = value;
+        } else if (key == "bitrate") {
+            video_bitrate = value;
+        } else if (key == "ip") {
             ip_address = value;
         } else if (key == "port") {
             port = atoi(value.data());
