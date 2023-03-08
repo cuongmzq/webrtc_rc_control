@@ -13,16 +13,17 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
 set(SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/viewfinder.c 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/mmalcam.c 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/helpers.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/h264_common.cc)
+${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/viewfinder.c
+${CMAKE_CURRENT_SOURCE_DIR}/src/mmalcam.c
+${CMAKE_CURRENT_SOURCE_DIR}/src/helpers.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/src/h264_common.cc)
+${CMAKE_CURRENT_SOURCE_DIR}/src/ArgParser.cpp
 
 set(LIBRARY_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libdatachannel.so 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libjuice.a 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libsrtp2.a 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libdatachannel.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libjuice.a
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/libsrtp2.a
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libusrsctp.a
 )
 
