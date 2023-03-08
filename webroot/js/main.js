@@ -58,7 +58,7 @@ let data = {
 let intervalSendDC = null;
 
 intervalSendDC = setInterval(() => {
-    if (dc) {
+    if (dc && (dc.readyState == "open")) {
         dc.send(JSON.stringify(data));
     }
 }, 50);
@@ -80,6 +80,12 @@ document.addEventListener('keydown', (event) => {
     console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
     if (dc) {
         switch(code) {
+            case "KeyA":
+                data.x = 1570;
+                break;
+            case "KeyD":
+                data.x = 1430;
+                break;
             case "KeyW":
                 data.y = 1660;
                 break;    
@@ -99,7 +105,16 @@ document.addEventListener('keyup', (event) => {
     console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
     if (dc) {
         switch(code) {
+            case "KeyA":
+                data.x = 1500;
+                break;
+            case "KeyD":
+                data.x = 1500;
+                break;
             case "KeyW":
+                data.y = 1500;
+                break;
+            case "KeyS":
                 data.y = 1500;
                 break;
         }
