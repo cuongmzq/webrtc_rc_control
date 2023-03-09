@@ -78,9 +78,9 @@ const THROTTLE_MIN = 1000;
 const THROTTLE_MID = 1500;
 const THROTTLE_MAX = 1530;
 
-const STEER_MIN = 1400;
+const STEER_MIN = 1350;
 const STEER_MID = 1500;
-const STEER_MAX = 1600;
+const STEER_MAX = 1650;
 
 function updateSteeringValue(dt) {
     dataX = dataX + (targetSteeringValue - dataX) * moveFactor * dt * 60 / 1000;
@@ -189,20 +189,20 @@ btnDown.addEventListener('mouseup', () => {
 
 btnLeft.addEventListener('mousedown', () => {
     targetSteeringValue = STEER_MIN;
-    moveFactor = 0.05;
+    moveFactor = 0.025;
 });
 
 btnLeft.addEventListener('mouseup', () => {
     targetSteeringValue = STEER_MID;
-    moveFactor = 0.06;
+    moveFactor = 0.05;
 });
 
 btnRight.addEventListener('mousedown', () => {
     targetSteeringValue = STEER_MAX;
-    moveFactor = 0.05;
+    moveFactor = 0.025;
 });
 
 btnRight.addEventListener('mouseup', () => {
     targetSteeringValue = STEER_MID;
-    moveFactor = 0.06;
+    moveFactor = 0.05;
 });
