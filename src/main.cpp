@@ -152,7 +152,7 @@ int main(int argc, char **argv) try {
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
     int pwm = 1500;
     while(true) {
-        std::cout << "Enter PWM: ";
+        std::cout << "Enter #PWM: ";
         cin >> pwm;
         if (pwm >= 1000 && pwm <= 2000) {
             bldc->servo(pwm);
