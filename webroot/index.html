@@ -16,118 +16,51 @@
     <title>Native Peer Connection</title>
 
     <link rel="icon" sizes="192x192" href="images/webrtc-icon-192x192.png">
-    <!-- <link href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet" type="text/css"> -->
     <link rel="stylesheet" href="css/main.css" />
 
 </head>
 
 <body>
-    <div class="highlight">
-        <p>PeerConnection</a></p>
-    </div>
-
     <section>
         <div id="container">
             <div id="video-container">
-                <div id="video-text-container">
-                    <h1 class="video-text" id="video-text-status">NO SIGNAL</h1>    
-                </div>
-                <!-- <div id="video-statistic-container">
-                    <h4 class="video-text" id="text-ping">32ms</h4>    
-                </div> -->
                 <video id="video" autoplay playsinline muted></video>
             </div>
 
-            <div id="button-container">
-                <button id="Connect">Connect</button>
-                <button id="Disconnect">Disconnect</button>
-                <button onclick="toogleOptions()" id="showConfig">Show Video Settings</button>
+            <div class="scroll-indicator">
+                <div class="bar"></div>
+                <span id="indicator" class="indicator"></span>
             </div>
 
-            <div id="media_configurations" class="configdetails" style="display:none">
-                <div class="configdetails">
-                    <div class="configitem">
-                        <label for="video_brightness">Brightness</label>
-                        <input id="video_brightness" type="range" min="0" max="10" value="0"
-                            oninput="video_brightness_disp.value=video_brightness.value">
-                        <output id="video_brightness_disp"></output>
-                    </div>
-
-                    <div class="configitem">
-                        <label for="video_contrast">Contrast</label>
-                        <input id="video_contrast" type="range" min="0" max="10" value="0"
-                            oninput="video_contrast_disp.value=video_contrast.value">
-                        <output id="video_contrast_disp"></output>
-                    </div>
-
-                    <div class="configitem">
-                        <label for="sharpness">Sharpness</label>
-                        <input id="video_sharpness" type="range" min="0" max="10" value="0"
-                            oninput="video_sharpness_disp.value=video_sharpness.value">
-                        <output id="video_sharpness_disp"></output>
-                    </div>
-
-                    <div class="configitem">
-                        <label for="video_saturation">Saturation</label>
-                        <input id="video_saturation" type="range" min="0" max="10" value="0"
-                            oninput="video_saturation_disp.value=video_saturation.value">
-                        <output id="video_saturation_disp"></output>
-                    </div>
-
-                    <div class="configitem">
-                        <label for="video_ev">EV</label>
-                        <input id="video_ev" type="range" min="0" max="10" value="0"
-                            oninput="video_ev_disp.value=video_ev.value">
-                        <output id="video_ev_disp"></output>
-                    </div>
-                </div> <!-- configdetails -->
-                <div class="configdetails">
-                    <div class="configitem">
-                        <label for="video_hflip"><span>Horizontal Flip </span></label>
-                        <select id="video_hflip">
-                            <option value=false><span>Disable</span></option>
-                        </select>
-                    </div>
-                    <div class="configitem">
-                        <label for="vieo_vflip"><span>Vertical Flip</span></label>
-                        <select id="video_vflip">
-                            <option value=false><span>Disable</span></option>
-                        </select>
-                    </div>
-                    <div class="configitem">
-                        <label for="video_roration"><span>Rotation</span></label>
-                        <select id="video_rotation">
-                            <option value=0><span>0</span></option>
-                        </select>
-                    </div>
-                </div> <!-- configdetails -->
-                <div class="configdetails">
-                    <div class="configitem">
-                        <label for="video_exposure_mode"><span>Exposure Mode</span></label>
-                        <select id="video_exposure_mode">
-                            <option value=0><span>0</span></option>
-                        </select>
-                    </div>
-                    <div class="configitem">
-                        <label for="video_awb_mode"><span>AWB mode</span></label>
-                        <select id="video_awb_mode">
-                            <option value=0><span>0</span></option>
-                        </select>
-                    </div>
-                </div> <!-- configdetails -->
-                <div class="configButtonsDiv">
-                    <button id="resetConfig" class="configButton">Reset</button>
-                    <button id="applyConfig" class="configButton">Apply</button>
-                </div> <!-- configdetails -->
-
-            </div> <!-- media_configurations -->
+            <div class="scroll-indicator scroll-indicator2">
+                <div class="bar"></div>
+                <span id="indicator2" class="indicator"></span>
+              </div>
         </div>
+    </section>
+    <section>
+        <div class="controller-buttons">
+            <button id="btn_left" class="square button">
+              <span></span>
+            </button>
+            <button id="btn_down" class="cross button">
+              <span></span>
+              <span></span>
+            </button>
+            <button id="btn_right" class="circle button">
+              <span></span>
+            </button>
+            <button id="btn_up" class="triangle button">
+              <span class="parent">
+                <span></span>
+              </span>
+            </button>
+          </div>
     </section>
     <section>
         <div id="snackBar">some messages...</div>
     </section>
 
-    <script src="js/adapter/adapter-latest.js"></script>
     <script src="js/connection.js"></script>
     <script src="js/main.js"></script>
 </body>

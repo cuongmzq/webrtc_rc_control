@@ -1,18 +1,3 @@
-document.getElementById("media_configurations").style.display = "none";
-
-function toogleOptions() {
-    let x = document.getElementById("media_configurations");
-    if (x.style.display === "none") {
-        x.style.display = "block";
-        document.getElementById("showConfig").innerText = "Hide Video Settings";
-    } else {
-        x.style.display = "none";
-        document.getElementById("showConfig").innerText = "Show Video Settings";
-    };
-}
-
-// !!!! This code is experimental...don't blame me if your performance tanks.
-
 const box = document.getElementById("video-text-container");
 const textObjects = document.getElementsByClassName("video-text");
 const totalText = textObjects.length
@@ -39,85 +24,185 @@ function calcTextSize() {
         element.style.fontSize = newValue + 'px';
     };
 }
-let _connectButton = document.getElementById('Connect');
-let _disconnectButton = document.getElementById('Disconnect');
-_connectButton.onclick = () => {
-    console.log('Starting streamer session');
-
-    start();
-};
-
-_disconnectButton.onclick = () => {
-    stop();
-};
 
 let data = {
-    x: 0,
-    y: 0
-}
-let intervalSendDC = null;
+    x: 1500,
+    y: 1500
+};
 
-intervalSendDC = setInterval(() => {
-    if (dc && (dc.readyState == "open")) {
-        dc.send(JSON.stringify(data));
+let dataX = 1500;
+let dataY = 1500;
+let previousTime;
+let timerSendDC = 0;
+let sendDCInterval = 20; //milliseconds
+
+function loop(timeStamp = 0) {
+    let dt;
+    if (previousTime == undefined) {
+        dt = 0;
+    } else {
+        dt = timeStamp - previousTime;
     }
-}, 50);
+    updateSteeringValue(dt);
+    updateThrottleValue(dt);
 
-let timer = null;
 
-let onK = () => {
-    data.x = 0;
-    data.y = 0;
-    clearTimeout(timer);
-    timer = null;
+    previousTime = timeStamp;
+
+    timerSendDC += dt;
+
+    if (timerSendDC >= sendDCInterval) {
+        timerSendDC = 0;
+        if (dc && (dc.readyState == "open")) {
+            data.x = Math.round(dataX);
+            data.y = Math.round(dataY);
+            dc.send(JSON.stringify(data));
+        }
+    }
+
+    requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+
+var scrollIndicator = document.getElementById('indicator');
+var scrollIndicator2 = document.getElementById('indicator2');
+
+let targetSteeringValue = 1500;
+let targetThrottleValue = 1500;
+
+let moveFactor = 0.05;
+let moveFactor2 = 0.05;
+
+const THROTTLE_MIN = 1000;
+const THROTTLE_MID = 1500;
+const THROTTLE_MAX = 1530;
+
+const STEER_MIN = 1400;
+const STEER_MID = 1500;
+const STEER_MAX = 1600;
+
+function updateSteeringValue(dt) {
+    dataX = dataX + (targetSteeringValue - dataX) * moveFactor * dt * 60 / 1000;
+
+    var transformString = 'translateX('+(((dataX - STEER_MIN) / (STEER_MAX - STEER_MIN))*300)+'px)';
+    scrollIndicator.style.mozTransform = transformString;
+    scrollIndicator.style.webkitTransform = transformString;
+    scrollIndicator.style.transform = transformString;
+}
+
+function updateThrottleValue(dt) {
+    dataY = dataY + (targetThrottleValue - dataY) * moveFactor2 * dt * 60 / 1000;
+
+    var transformString = 'translateX('+(((dataY - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN))*300)+'px)';
+    scrollIndicator2.style.mozTransform = transformString;
+    scrollIndicator2.style.webkitTransform = transformString;
+    scrollIndicator2.style.transform = transformString;
 }
 
 // Add event listener on keydown
 document.addEventListener('keydown', (event) => {
+    // event.preventDefault();
     var name = event.key;
     var code = event.code;
     // Alert the key name and key code on keydown
-    console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
-    if (dc) {
+    // console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
+    // if (dc) {
         switch(code) {
             case "KeyA":
-                data.x = 1570;
+                targetSteeringValue = STEER_MIN;
+                moveFactor = 0.05;
                 break;
             case "KeyD":
-                data.x = 1430;
+                targetSteeringValue = STEER_MAX;
+                moveFactor = 0.05;
                 break;
             case "KeyW":
-                data.y = 1660;
+                targetThrottleValue = THROTTLE_MIN;
+                moveFactor2 = 0.005;
                 break;    
             case "KeyS":
-                data.y = 1450;
+                targetThrottleValue = THROTTLE_MAX;
+                moveFactor2 = 0.08;
                 break;
         }
-    }
+    // }
     
   }, false);
 
   // Add event listener on keydown
 document.addEventListener('keyup', (event) => {
+    // event.preventDefault();
     var name = event.key;
     var code = event.code;
     // Alert the key name and key code on keydown
-    console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
-    if (dc) {
+    // console.log(`Key pressed ${name} \r\n Key code value: ${code}`);
+    // if (dc) {
         switch(code) {
             case "KeyA":
-                data.x = 1500;
+                targetSteeringValue = STEER_MID;
+                moveFactor = 0.06;
+
                 break;
             case "KeyD":
-                data.x = 1500;
+                targetSteeringValue = STEER_MID;
+                moveFactor = 0.06;
+
                 break;
             case "KeyW":
-                data.y = 1500;
+                targetThrottleValue = THROTTLE_MID;
+                moveFactor2 = 0.05;
                 break;
             case "KeyS":
-                data.y = 1500;
+                targetThrottleValue = THROTTLE_MID;
+                moveFactor2 = 0.05;
                 break;
         }
-    }
+    // }
     
   }, false);
+
+let btnUp = document.getElementById('btn_up');
+let btnDown = document.getElementById('btn_down');
+let btnLeft = document.getElementById('btn_left');
+let btnRight = document.getElementById('btn_right');
+
+btnUp.addEventListener('mousedown', () => {
+    targetThrottleValue = THROTTLE_MIN;
+    moveFactor2 = 0.005;
+});
+
+btnUp.addEventListener('mouseup', () => {
+    targetThrottleValue = THROTTLE_MID;
+    moveFactor2 = 0.08;
+});
+
+btnDown.addEventListener('mousedown', () => {
+    targetThrottleValue = THROTTLE_MAX;
+    moveFactor2 = 0.08;
+});
+
+btnDown.addEventListener('mouseup', () => {
+    targetThrottleValue = THROTTLE_MID;
+    moveFactor2 = 0.1;
+});
+
+btnLeft.addEventListener('mousedown', () => {
+    targetSteeringValue = STEER_MIN;
+    moveFactor = 0.05;
+});
+
+btnLeft.addEventListener('mouseup', () => {
+    targetSteeringValue = STEER_MID;
+    moveFactor = 0.06;
+});
+
+btnRight.addEventListener('mousedown', () => {
+    targetSteeringValue = STEER_MAX;
+    moveFactor = 0.05;
+});
+
+btnRight.addEventListener('mouseup', () => {
+    targetSteeringValue = STEER_MID;
+    moveFactor = 0.06;
+});

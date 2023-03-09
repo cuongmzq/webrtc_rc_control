@@ -97,7 +97,7 @@ background-color: #cf402f;
 }
 
 button:hover {
-background-color: #cf402f;
+background-color: #cce0ff;
 }
 
 button[disabled] {
@@ -122,7 +122,7 @@ font-weight: 400;
 div#container {
 margin: 0 auto 0 auto;
 max-width: 50em;
-padding: 1em 1.5em 1.3em 1.5em;
+/* padding: 0.1em 0.1em 0.1em 0.1em; */
 }
 
 div#links {
@@ -417,3 +417,129 @@ div#video-container {
 #button-container {
   margin-top: 20px;
 }
+
+
+.scroll-indicator {
+    display: none;
+    width: 300px;
+    margin-left: -150px;
+    left: 20%;
+    height: 40px;
+    margin-top: -20px;
+    top: 20%;
+    position: fixed;
+}
+
+.scroll-indicator2 {
+    display: none;
+    width: 300px;
+    margin-left: -150px;
+    left: 20%;
+    height: 40px;
+    margin-top: -20px;
+    top: 60%;
+    position: fixed;
+}
+  
+.bar {
+    width: 100%;
+    height: 4px;
+    background: #6c7aaa;
+    position: absolute;
+    top: 50%;
+    margin-top: -2px;
+}
+  
+.indicator {
+    position: absolute;
+    height: 40px;
+    width: 3px;
+    background: #1b202f;
+}
+span {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+.controller-buttons {
+    background-color: #333;
+    border-radius: 50%;
+    height: 300px;
+    margin: 30px auto 0;
+    position: relative;
+    width: 300px;
+}
+.controller-buttons .button {
+    background-color: #474448;
+    border-radius: 50%;
+    height: 100px;
+    position: absolute;
+    width: 100px;
+}
+.controller-buttons .button:active {
+    box-shadow: inset 0 5px 6px 5px #000, 0 0 0 0;
+}
+.controller-buttons .button span {
+    display: block;
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 0;
+}
+.controller-buttons .triangle {
+    top: 25px;
+    left: 50%;
+    margin-left: -50px;
+}
+/* .controller-buttons .triangle .parent {
+    position: relative;
+    top: -8px;
+    width: 0;
+    border-bottom: solid 50px #40e2a0;
+    border-right: solid 30px transparent;
+    border-left: solid 30px transparent;
+} */
+/* .controller-buttons .triangle .parent span {
+    position: absolute;
+    top: -21px;
+    left: -18px;
+    width: 0;
+    border-bottom: solid 30px #474448;
+    border-right: solid 18px transparent;
+    border-left: solid 18px transparent;
+} */
+.controller-buttons .square {
+    left: 10px;
+    top: 50%;
+    margin-top: -50px;
+}
+/* .controller-buttons .square span {
+    border: 8px solid #ff69f8;
+    width: 45px;
+    height: 45px;
+    margin-top: 18px;
+} */
+.controller-buttons .cross {
+    bottom: 10px;
+    left: 50%;
+    margin-left: -50px;
+}
+/* .controller-buttons .cross span {
+    width: 60px;
+    height: 8px;
+    background-color: #7cb2e8;
+    transform: rotate(45deg);
+    margin-top: 36px;
+}
+.controller-buttons .cross span + span {
+    transform: rotate(-45deg);
+    margin-top: -8px;
+} */
+.controller-buttons .circle {
+    right: 10px;
+    top: 50%;
+    margin-top: -50px;
+}
+/* .controller-buttons .circle span {
+    border: 8px solid #f66;
+    border-radius: 50%;
+} */

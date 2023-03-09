@@ -4,7 +4,10 @@ const clientId = randomId(10);
 const websocket = new WebSocket('ws://raspberrypi.local:8000/' + clientId);
 
 websocket.onopen = () => {
-    document.getElementById('Connect').disabled = false;
+    // document.getElementById('Connect').disabled = false;
+    setTimeout(() => {
+        start();
+    }, 500);
 }
 
 websocket.onmessage = async (evt) => {
@@ -30,11 +33,11 @@ function createPeerConnection() {
     // Receive audio/video track
     pc.ontrack = (evt) => {
         const video = document.getElementById('video');
-        if (!video.srcObject) {
+        // if (!video.srcObject) {
           video.srcObject = evt.streams[0]; // The stream groups audio and video tracks
         //   video.play();
-            document.getElementById('video-text-container').style.display = 'none';
-        }
+            // document.getElementById('video-text-container').style.display = 'none';
+        // }
     };
 
     // Receive data channel
@@ -106,17 +109,12 @@ function sendRequest() {
 }
 
 function start() {
-    document.getElementById('Connect').disabled = true;
-    document.getElementById('Disconnect').disabled = false;
     sendRequest();
 }
 
 function stop() {
-    document.getElementById('Connect').disabled = false;
-    document.getElementById('Disconnect').disabled = true;
-    document.getElementById('video-text-container').style.display = 'flex';
     const video = document.getElementById('video');
-    video.srcObject = null;
+    // video.srcObject = null;
     // close data channel
     if (dc) {
         dc.close();
@@ -139,7 +137,7 @@ function stop() {
             sender.track.stop();
         }
     });
-    document.getElementById('video-text-container').style.display = 'none';
+    // document.getElementById('video-text-container').style.display = 'none';
     // close peer connection
     setTimeout(() => {
         pc.close();
