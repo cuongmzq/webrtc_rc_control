@@ -76,7 +76,7 @@ let moveFactor2 = 0.05;
 
 const THROTTLE_MIN = 1000;
 const THROTTLE_MID = 1500;
-const THROTTLE_MAX = 1530;
+const THROTTLE_MAX = 1700;
 
 const STEER_MIN = 1350;
 const STEER_MID = 1550;
