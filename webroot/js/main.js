@@ -151,11 +151,11 @@ document.addEventListener('keyup', (event) => {
                 break;
             case "KeyW":
                 targetThrottleValue = THROTTLE_MID;
-                moveFactor2 = 0.05;
+                dataY = 1500;
                 break;
             case "KeyS":
                 targetThrottleValue = THROTTLE_MID;
-                moveFactor2 = 0.05;
+                dataY = 1500;
                 break;
         }
     // }
