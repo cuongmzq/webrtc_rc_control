@@ -111,11 +111,11 @@ document.addEventListener('keydown', (event) => {
         switch(code) {
             case "KeyA":
                 targetSteeringValue = STEER_MIN;
-                moveFactor = 0.05;
+                moveFactor = 0.02;
                 break;
             case "KeyD":
                 targetSteeringValue = STEER_MAX;
-                moveFactor = 0.05;
+                moveFactor = 0.02;
                 break;
             case "KeyW":
                 targetThrottleValue = THROTTLE_MIN;
@@ -141,12 +141,12 @@ document.addEventListener('keyup', (event) => {
         switch(code) {
             case "KeyA":
                 targetSteeringValue = STEER_MID;
-                moveFactor = 0.03;
+                moveFactor = 0.02;
 
                 break;
             case "KeyD":
                 targetSteeringValue = STEER_MID;
-                moveFactor = 0.03;
+                moveFactor = 0.02;
 
                 break;
             case "KeyW":

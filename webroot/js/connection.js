@@ -1,7 +1,8 @@
 // const dataChannelLog = document.getElementById('data-channel');
 
 const clientId = randomId(10);
-const websocket = new WebSocket('ws://raspberrypi.local:8000/' + clientId);
+const hostname = document.location.hostname.replace(/(:.*)/, '');
+const websocket = new WebSocket('ws://' + hostname +':8000/' + clientId);
 
 websocket.onopen = () => {
     // document.getElementById('Connect').disabled = false;
