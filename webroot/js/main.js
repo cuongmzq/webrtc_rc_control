@@ -79,8 +79,8 @@ const THROTTLE_MID = 1500;
 const THROTTLE_MAX = 1530;
 
 const STEER_MIN = 1350;
-const STEER_MID = 1500;
-const STEER_MAX = 1650;
+const STEER_MID = 1550;
+const STEER_MAX = 1700;
 
 function updateSteeringValue(dt) {
     dataX = dataX + (targetSteeringValue - dataX) * moveFactor * dt * 60 / 1000;
