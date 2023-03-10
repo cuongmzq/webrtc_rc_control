@@ -174,7 +174,8 @@ btnUp.addEventListener('mousedown', () => {
 
 btnUp.addEventListener('mouseup', () => {
     targetThrottleValue = THROTTLE_MID;
-    moveFactor2 = 0.08;
+    dataY = 1500;
+    // moveFactor2 = 0.08;
 });
 
 btnDown.addEventListener('mousedown', () => {
@@ -184,7 +185,8 @@ btnDown.addEventListener('mousedown', () => {
 
 btnDown.addEventListener('mouseup', () => {
     targetThrottleValue = THROTTLE_MID;
-    moveFactor2 = 0.1;
+    dataY = 1500;
+    // moveFactor2 = 0.1;
 });
 
 btnLeft.addEventListener('mousedown', () => {
