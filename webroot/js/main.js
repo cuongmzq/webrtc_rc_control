@@ -141,12 +141,12 @@ document.addEventListener('keyup', (event) => {
         switch(code) {
             case "KeyA":
                 targetSteeringValue = STEER_MID;
-                moveFactor = 0.06;
+                moveFactor = 0.03;
 
                 break;
             case "KeyD":
                 targetSteeringValue = STEER_MID;
-                moveFactor = 0.06;
+                moveFactor = 0.03;
 
                 break;
             case "KeyW":
