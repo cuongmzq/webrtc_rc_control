@@ -394,7 +394,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
             start_ptr = s_buf + s_buf_length;
             s_buf_length += 4 + payload_size;
         } else {
-            start_ptr = static_cast<std::byte>(buffer->data);
+            start_ptr = static_cast<std::byte*>(buffer->data);
         }
 
         *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
