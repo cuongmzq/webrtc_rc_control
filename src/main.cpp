@@ -312,7 +312,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
         size_t payload_start_offset = jt->payload_start_offset;
         size_t payload_size = jt->payload_size;
 
-        std::cout << "NALU start" << start_offset << " payload_start " << payload_start_offset << " payload_size " << payload_size << std::endl;
+        std::cout << "NALU start " << start_offset << " payload_start " << payload_start_offset << " payload_size " << payload_size << std::endl;
         
         start_ptr = s_buf + s_buf_length;
         s_buf_length += 4 + payload_size;
