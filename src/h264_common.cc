@@ -24,7 +24,7 @@ std::vector<NaluIndex>* FindNaluIndices(const uint8_t* buffer,
   // skip ahead to the next 3-byte sequence. 0s and 1s are relatively rare, so
   // this will skip the majority of reads/checks.
   if (buffer_size < kNaluShortStartSequenceSize) {
-    return nalu_indices;
+    return &nalu_indices;
   }
 
   nalu_indices.clear();
