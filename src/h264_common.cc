@@ -27,7 +27,7 @@ std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
     return nalu_indices;
   }
 
-    nalu_indices.clear();
+  nalu_indices.clear();
   static_assert(kNaluShortStartSequenceSize >= 2,
                 "kNaluShortStartSequenceSize must be larger or equals to 2");
   const size_t end = buffer_size - kNaluShortStartSequenceSize;
@@ -66,52 +66,5 @@ std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
 NaluType ParseNaluType(uint8_t data) {
   return static_cast<NaluType>(data & kNaluTypeMask);
 }
-
-std::vector<uint8_t> ParseRbsp(const uint8_t* data, size_t length) {
-  std::vector<uint8_t> out;
-  out.reserve(length);
-
-  for (size_t i = 0; i < length;) {
-    // Be careful about over/underflow here. byte_length_ - 3 can underflow, and
-    // i + 3 can overflow, but byte_length_ - i can't, because i < byte_length_
-    // above, and that expression will produce the number of bytes left in
-    // the stream including the byte at i.
-    if (length - i >= 3 && !data[i] && !data[i + 1] && data[i + 2] == 3) {
-      // Two rbsp bytes.
-      out.push_back(data[i++]);
-      out.push_back(data[i++]);
-      // Skip the emulation byte.
-      i++;
-    } else {
-      // Single rbsp byte.
-      out.push_back(data[i++]);
-    }
-  }
-  return out;
-}
-
-// void WriteRbsp(const uint8_t* bytes, size_t length, rtc::Buffer* destination) {
-//   static const uint8_t kZerosInStartSequence = 2;
-//   static const uint8_t kEmulationByte = 0x03u;
-//   size_t num_consecutive_zeros = 0;
-//   destination->EnsureCapacity(destination->size() + length);
-
-//   for (size_t i = 0; i < length; ++i) {
-//     uint8_t byte = bytes[i];
-//     if (byte <= kEmulationByte &&
-//         num_consecutive_zeros >= kZerosInStartSequence) {
-//       // Need to escape.
-//       destination->AppendData(kEmulationByte);
-//       num_consecutive_zeros = 0;
-//     }
-//     destination->AppendData(byte);
-//     if (byte == 0) {
-//       ++num_consecutive_zeros;
-//     } else {
-//       num_consecutive_zeros = 0;
-//     }
-//   }
-// }
-
 }  // namespace H264
 // }  // namespace webrtc
