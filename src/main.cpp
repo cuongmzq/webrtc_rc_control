@@ -444,7 +444,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 if (isConfigOrKeyFrame) {
                     trackData->track->send(s_buf, s_buf_length);
                 } else {
-                    trackData->track->send(buffer->data, buffer->length);
+                    trackData->track->send(start_ptr, buffer->length);
                 }
             }
         }
