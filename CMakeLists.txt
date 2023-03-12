@@ -27,9 +27,6 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src/ArgParser.cpp)
 
 set(LIBRARY_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/include/libdatachannel.so
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libjuice.a
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libsrtp2.a
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/libusrsctp.a
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
