@@ -306,11 +306,13 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     last_frame_timestamp = buffer->pts;
 
     std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
-
+    std::cout << "MMAL offset: " << buffer->offset << " length " << buffer->length << " alloc " << buffer->alloc_size << std::endl;
     for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
         size_t start_offset = jt->start_offset;
         size_t payload_start_offset = jt->payload_start_offset;
         size_t payload_size = jt->payload_size;
+
+        std::cout << "NALU start" << start_offset << " payload_start " << payload_start_offset << " payload_size " << payload_size << std::endl;
         
         start_ptr = s_buf + s_buf_length;
         s_buf_length += 4 + payload_size;
@@ -335,6 +337,8 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 break;
         }
     }
+
+    std::cout << std::endl;
 
     if (!pending_frame) {
         /** Last working copy**/
