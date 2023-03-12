@@ -292,81 +292,6 @@ void addToStream(shared_ptr<Client> client, bool isAddingVideo) {
 }
 
 
-// void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
-//     if (pending_frame) {
-//         pending_frame = false;
-//     } else {
-//         s_buf_length = 0;
-//         if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) {
-//            pending_frame = true;
-//         }
-//     }
-
-//     last_frame_duration = buffer->pts - last_frame_timestamp;
-//     last_frame_timestamp = buffer->pts;
-
-//     std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
-//     for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
-//         size_t start_offset = jt->start_offset;
-//         size_t payload_start_offset = jt->payload_start_offset;
-//         size_t payload_size = jt->payload_size;
-
-//         start_ptr = s_buf + s_buf_length;
-//         s_buf_length += 4 + payload_size;
-
-//         memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
-
-//         *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-//         *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-//         *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-//         *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
-
-//         auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
-//         switch (type) {
-//             case 7:
-//                 previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-//                 break;
-//             case 8:
-//                 previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-//                 break;
-//             case 5:
-//                 previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-//                 break;
-//         }
-//     }
-
-//     std::cout << std::endl;
-
-//     if (!pending_frame) {
-//         /** Last working copy**/
-//         for(auto id_client: clients) {
-//             auto id = id_client.first;
-//             auto client = id_client.second;
-//             auto optTrackData = client->video;
-//             if (client->getState() == Client::State::Ready && optTrackData.has_value()) {
-//                 auto trackData = optTrackData.value();
-//                 auto rtpConfig = trackData->sender->rtpConfig;
-
-//                 // // sample time is in us, we need to convert it to seconds
-//                 auto elapsedSeconds = double(last_frame_duration) / (1000 * 1000);
-//                 // get elapsed time in clock rate
-//                 uint32_t elapsedTimestamp = rtpConfig->secondsToTimestamp(elapsedSeconds);
-//                 // set new timestamp
-//                 rtpConfig->timestamp = rtpConfig->startTimestamp + elapsedTimestamp;
-
-//                 // get elapsed time in clock rate from last RTCP sender report
-//                 auto reportElapsedTimestamp = rtpConfig->timestamp - trackData->sender->lastReportedTimestamp();
-//                 // check if last report was at least 1 second ago
-//                 if (rtpConfig->timestampToSeconds(reportElapsedTimestamp) > 1) {
-//                     trackData->sender->setNeedsToReport();
-//                 }
-
-//                 trackData->track->send(s_buf, s_buf_length);
-//             }
-//         }
-//     }
-// }
-
 void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     if (pending_frame) {
         pending_frame = false;
@@ -377,25 +302,22 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
         }
     }
 
-    bool isConfigOrKeyFrame = (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) || (buffer->flags & MMAL_BUFFER_HEADER_FLAG_KEYFRAME);
-
     last_frame_duration = buffer->pts - last_frame_timestamp;
     last_frame_timestamp = buffer->pts;
 
-    std::vector<H264::NaluIndex>* nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
-    for (auto jt = nalu_indices->begin(); jt < nalu_indices->end(); ++jt) {
+    std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
+    std::cout << "MMAL offset: " << buffer->offset << " length " << buffer->length << " alloc " << buffer->alloc_size << std::endl;
+    for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
         size_t start_offset = jt->start_offset;
         size_t payload_start_offset = jt->payload_start_offset;
         size_t payload_size = jt->payload_size;
 
+        std::cout << "NALU start " << start_offset << " payload_start " << payload_start_offset << " payload_size " << payload_size << std::endl;
+        
+        start_ptr = s_buf + s_buf_length;
+        s_buf_length += 4 + payload_size;
 
-        if (isConfigOrKeyFrame) {
-            memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
-            start_ptr = s_buf + s_buf_length;
-            s_buf_length += 4 + payload_size;
-        } else {
-            start_ptr = buffer->data;
-        }
+        memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
 
         *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
         *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
@@ -441,11 +363,8 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 if (rtpConfig->timestampToSeconds(reportElapsedTimestamp) > 1) {
                     trackData->sender->setNeedsToReport();
                 }
-                if (isConfigOrKeyFrame) {
-                    trackData->track->send(s_buf, s_buf_length);
-                } else {
-                    trackData->track->send(buffer->data, buffer->length);
-                }
+
+                trackData->track->send(s_buf, s_buf_length);
             }
         }
     }

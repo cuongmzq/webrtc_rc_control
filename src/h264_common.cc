@@ -17,7 +17,7 @@ namespace H264 {
 
 const uint8_t kNaluTypeMask = 0x1F;
 std::vector<NaluIndex> nalu_indices;
-std::vector<NaluIndex>* FindNaluIndices(const uint8_t* buffer,
+std::vector<NaluIndex> FindNaluIndices(const uint8_t* buffer,
                                        size_t buffer_size) {
   // This is sorta like Boyer-Moore, but with only the first optimization step:
   // given a 3-byte sequence we're looking at, if the 3rd byte isn't 1 or 0,
@@ -60,7 +60,7 @@ std::vector<NaluIndex>* FindNaluIndices(const uint8_t* buffer,
   if (it != nalu_indices.rend())
     it->payload_size = buffer_size - it->payload_start_offset;
 
-  return &nalu_indices;
+  return nalu_indices;
 }
 
 NaluType ParseNaluType(uint8_t data) {
