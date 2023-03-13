@@ -1081,187 +1081,15 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
    return 0;
 }
 
-#if USE_CONTAINER
-/*****************************************************************************/
-static MMAL_STATUS_T test_container_to_mmal_status(VC_CONTAINER_STATUS_T status)
-{
-   switch (status)
-   {
-      case VC_CONTAINER_SUCCESS:
-      case VC_CONTAINER_ERROR_NOT_READY:
-         return MMAL_SUCCESS;
-      case VC_CONTAINER_ERROR_LIMIT_REACHED:
-      case VC_CONTAINER_ERROR_OUT_OF_SPACE:
-         return MMAL_ENOSPC;
-      case VC_CONTAINER_ERROR_URI_NOT_FOUND:
-         return MMAL_ENOENT;
-      default:
-         return MMAL_ENXIO;
-   }
-}
-
-/*****************************************************************************/
-static VC_CONTAINER_T *test_container_open(const char *uri, MMAL_ES_FORMAT_T *format, MMAL_STATUS_T *p_status)
-{
-   VC_CONTAINER_T *container = 0;
-   VC_CONTAINER_STATUS_T status = VC_CONTAINER_ERROR_FAILED;
-   VC_CONTAINER_ES_FORMAT_T *container_format = 0;
-
-   /* Open container */
-   container = vc_container_open_writer(uri, &status, 0, 0);
-   if(status != VC_CONTAINER_SUCCESS)
-   {
-      LOG_ERROR("error opening uri %s (%i)", uri, status);
-      goto error;
-   }
-
-   /* Set format from MMAL port format */
-   container_format = vc_container_format_create(0);
-   if (!container_format)
-   {
-      status = VC_CONTAINER_ERROR_OUT_OF_MEMORY;
-      LOG_ERROR("error (%i)", status);
-      goto error;
-   }
-
-   switch (format->type)
-   {
-      case MMAL_ES_TYPE_VIDEO: 
-         container_format->es_type = VC_CONTAINER_ES_TYPE_VIDEO;
-         break;
-      default:
-         status = VC_CONTAINER_ERROR_FORMAT_NOT_SUPPORTED;
-         LOG_ERROR("unsupported elementary stream format error (%i)", status);
-         goto error;
-   }
-
-   container_format->codec = test_container_encoding_to_codec(format->encoding);
-   if(format->encoding == MMAL_ENCODING_H264)
-      container_format->codec_variant = VC_FOURCC('a','v','c','C');
-   container_format->type->video.width = format->es->video.width;
-   container_format->type->video.height = format->es->video.height;
-   container_format->type->video.frame_rate_num = format->es->video.frame_rate.num;
-   container_format->type->video.frame_rate_den = format->es->video.frame_rate.den;
-   container_format->type->video.par_num = format->es->video.par.num;
-   container_format->type->video.par_den = format->es->video.par.den;
-   container_format->bitrate = format->bitrate;
-   container_format->flags |= VC_CONTAINER_ES_FORMAT_FLAG_FRAMED;
-
-   container_format->extradata_size = 0;
-
-   status = vc_container_control(container, VC_CONTAINER_CONTROL_TRACK_ADD, container_format);
-   if(status != VC_CONTAINER_SUCCESS)
-   {
-      LOG_ERROR("error adding track (%i)", status);
-      goto error;
-   }
-
-   vc_container_control(container, VC_CONTAINER_CONTROL_TRACK_ADD_DONE);
-
-end:
-   if (container_format)
-      vc_container_format_delete(container_format);
-   if (p_status) *p_status = test_container_to_mmal_status(status);
-   return container;
-error:
-   if (container)
-   {
-      vc_container_close(container);
-      container = 0;
-   }
-   goto end;
-}
-
-/*****************************************************************************/
-static MMAL_STATUS_T test_container_write(VC_CONTAINER_T *container, MMAL_BUFFER_HEADER_T *buffer)
-{
-   VC_CONTAINER_PACKET_T packet;
-   VC_CONTAINER_STATUS_T status;
-   memset(&packet, 0, sizeof(packet));
-   static int first_fragment = 1;
-
-#if 0
-   if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG)
-      buffer->length = 0; /* Discard codec config data arriving in buffers */
-#endif
-
-   if (buffer->length == 0)
-      return MMAL_SUCCESS;
-
-   packet.track = 0;
-   packet.pts = buffer->pts == MMAL_TIME_UNKNOWN ? VC_CONTAINER_TIME_UNKNOWN : buffer->pts;
-   packet.dts = buffer->dts == MMAL_TIME_UNKNOWN ? VC_CONTAINER_TIME_UNKNOWN : buffer->dts;
-   if(buffer->flags & MMAL_BUFFER_HEADER_FLAG_KEYFRAME)
-      packet.flags |= VC_CONTAINER_PACKET_FLAG_KEYFRAME;
-   if(first_fragment || (buffer->flags & MMAL_BUFFER_HEADER_FLAG_FRAME_START))
-   {
-      packet.flags |= VC_CONTAINER_PACKET_FLAG_FRAME_START;
-      first_fragment = 0;
-   }
-
-   if(buffer->flags & MMAL_BUFFER_HEADER_FLAG_FRAME_END)
-   {
-      packet.flags |= VC_CONTAINER_PACKET_FLAG_FRAME_END;
-      first_fragment = 1; /* Next buffer will be the first fragment */
-   }
-
-   packet.size = packet.buffer_size = buffer->length;
-   if ((packet.flags & VC_CONTAINER_PACKET_FLAG_FRAME) == VC_CONTAINER_PACKET_FLAG_FRAME)
-      packet.frame_size = packet.size;
-
-   vcos_assert(buffer->offset == 0);
-
-   packet.data = buffer->data;
-
-   LOG_DEBUG("writing packet: track %i, size %i/%i, pts %"PRId64", flags %x%s",
-         packet.track, packet.size, packet.frame_size, packet.pts,
-         packet.flags, (packet.flags & VC_CONTAINER_PACKET_FLAG_KEYFRAME) ? " (keyframe)" : "");
-
-   status = vc_container_write(container, &packet);
-
-   return test_container_to_mmal_status(status);
-}
-
-/*****************************************************************************/
-static struct {
-   VC_CONTAINER_FOURCC_T codec;
-   uint32_t encoding;
-} codec_to_encoding_table[] =
-{
-   {VC_CONTAINER_CODEC_H263,           MMAL_ENCODING_H263},
-   {VC_CONTAINER_CODEC_H264,           MMAL_ENCODING_H264},
-   {VC_CONTAINER_CODEC_MP4V,           MMAL_ENCODING_MP4V},
-   {VC_CONTAINER_CODEC_MP2V,           MMAL_ENCODING_MP2V},
-   {VC_CONTAINER_CODEC_MP1V,           MMAL_ENCODING_MP1V},
-   {VC_CONTAINER_CODEC_WMV3,           MMAL_ENCODING_WMV3},
-   {VC_CONTAINER_CODEC_WMV2,           MMAL_ENCODING_WMV2},
-   {VC_CONTAINER_CODEC_WMV1,           MMAL_ENCODING_WMV1},
-   {VC_CONTAINER_CODEC_WVC1,           MMAL_ENCODING_WVC1},
-   {VC_CONTAINER_CODEC_VP6,            MMAL_ENCODING_VP6},
-   {VC_CONTAINER_CODEC_VP7,            MMAL_ENCODING_VP7},
-   {VC_CONTAINER_CODEC_VP8,            MMAL_ENCODING_VP8},
-   {VC_CONTAINER_CODEC_THEORA,         MMAL_ENCODING_THEORA},
-   {VC_CONTAINER_CODEC_UNKNOWN,        MMAL_ENCODING_UNKNOWN}
-};
-
-static VC_CONTAINER_FOURCC_T test_container_encoding_to_codec(uint32_t encoding)
-{
-   unsigned int i;
-   for(i = 0; codec_to_encoding_table[i].codec != VC_CONTAINER_CODEC_UNKNOWN; i++)
-      if(codec_to_encoding_table[i].encoding == encoding) break;
-   return codec_to_encoding_table[i].codec;
-}
-#endif
-
 /*****************************************************************************/
 int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_buffer_cb cb)
 {
    MMAL_STATUS_T status = MMAL_SUCCESS;
-   MMAL_POOL_T *pool_viewfinder = 0, *pool_encoder_in = 0, *pool_encoder_out = 0;
-   MMAL_QUEUE_T *queue_viewfinder = 0, *queue_encoder_in = 0, *queue_encoder_out = 0;
-   MMAL_COMPONENT_T *camera = 0, *encoder = 0, *render = 0;
-   MMAL_PORT_T *viewfinder_port = 0, *video_port = 0, *still_port = 0;
-   MMAL_PORT_T *render_port = 0, *encoder_input = 0, *encoder_output = 0;
+   MMAL_POOL_T *pool_encoder_in = 0, *pool_encoder_out = 0;
+   MMAL_QUEUE_T *queue_encoder_in = 0, *queue_encoder_out = 0;
+   MMAL_COMPONENT_T *camera = 0, *encoder = 0;
+   MMAL_PORT_T *video_port = 0;
+   MMAL_PORT_T *encoder_input = 0, *encoder_output = 0;
    uint32_t ms_per_change, last_change_ms, set_focus_delay_ms;
    int packet_count = 0;
 
@@ -1281,25 +1109,7 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       behaviour->init_result = MMALCAM_INIT_ERROR_CAMERA;
       goto error;
    }
-   viewfinder_port = camera->output[0];
    video_port = camera->output[1];
-   still_port = camera->output[2];
-
-//    /* Create and setup video render component */
-//    render = test_video_render_create(behaviour, &status);
-//    if(!render)
-//    {
-//       behaviour->init_result = MMALCAM_INIT_ERROR_RENDER;
-//       goto error;
-//    }
-//    render_port = render->input[0];
-
-//    status = connect_ports(viewfinder_port, render_port, &queue_viewfinder, &pool_viewfinder);
-//    if (status != MMAL_SUCCESS)
-//    {
-//       behaviour->init_result = MMALCAM_INIT_ERROR_VIEWFINDER;
-//       goto error;
-//    }
 
    /*...*/
    MMAL_PARAMETER_BOOLEAN_T camera_capture =
@@ -1314,9 +1124,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    }
    encoder_input = encoder->input[0];
    encoder_output = encoder->output[0];
-
-   if (encoder_output->format->encoding == MMAL_ENCODING_JPEG)
-      video_port = still_port;
 
    status = connect_ports(video_port, encoder_input, &queue_encoder_in, &pool_encoder_in);
    if (status != MMAL_SUCCESS)
@@ -1365,10 +1172,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
          }
       }
 
-    //   /* Send empty buffers to the output ports */
-    //   status = fill_port_from_pool(viewfinder_port, pool_viewfinder);
-    //   if (status != MMAL_SUCCESS)
-    //      break;
       status = fill_port_from_pool(video_port, pool_encoder_in);
       if (status != MMAL_SUCCESS)
          break;
@@ -1376,10 +1179,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       if (status != MMAL_SUCCESS)
          break;
 
-    //   /* Process filled output buffers */
-    //   status = send_buffer_from_queue(render_port, queue_viewfinder);
-    //   if (status != MMAL_SUCCESS)
-    //      break;
       status = send_buffer_from_queue(encoder_input, queue_encoder_in);
       if (status != MMAL_SUCCESS)
          break;
@@ -1391,7 +1190,9 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
          if (buffer)
          {
             mmal_buffer_header_mem_lock(buffer);
+            
             cb(buffer);
+            
             mmal_buffer_header_mem_unlock(buffer);
             packet_count++;
             mmal_buffer_header_release(buffer);
@@ -1455,14 +1256,11 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    }
 
    /* Disable ports */
-//    disable_port(viewfinder_port);
-//    disable_port(render_port);
    disable_port(video_port);
    disable_port(encoder_input);
    disable_port(encoder_output);
 
    /* Disable components */
-//    mmal_component_disable(render);
    if (encoder)
       mmal_component_disable(encoder);
    mmal_component_disable(camera);
@@ -1477,22 +1275,16 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
 
  error:
    /* The pools need to be destroyed first since they are owned by the components */
-//    if(pool_viewfinder)
-//       mmal_port_pool_destroy(viewfinder_port, pool_viewfinder);
    if(pool_encoder_in)
       mmal_port_pool_destroy(video_port, pool_encoder_in);
    if(pool_encoder_out)
       mmal_port_pool_destroy(encoder_output, pool_encoder_out);
 
-//    if(render)
-    //   mmal_component_destroy(render);
    if(encoder)
       mmal_component_destroy(encoder);
    if(camera)
       mmal_component_destroy(camera);
 
-//    if(queue_viewfinder)
-    //   mmal_queue_destroy(queue_viewfinder);
    if(queue_encoder_in)
       mmal_queue_destroy(queue_encoder_in);
    if(queue_encoder_out)
