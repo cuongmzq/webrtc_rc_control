@@ -366,8 +366,9 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     }
 }
 
+vector<byte> units{};
 vector<byte> initialNALUS() {
-    vector<byte> units{};
+    units.clear();
     if (previousUnitType7.has_value()) {
         auto nalu = previousUnitType7.value();
         units.insert(units.end(), nalu.begin(), nalu.end());
