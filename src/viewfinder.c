@@ -1285,21 +1285,21 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    video_port = camera->output[1];
    still_port = camera->output[2];
 
-   /* Create and setup video render component */
-   render = test_video_render_create(behaviour, &status);
-   if(!render)
-   {
-      behaviour->init_result = MMALCAM_INIT_ERROR_RENDER;
-      goto error;
-   }
-   render_port = render->input[0];
+//    /* Create and setup video render component */
+//    render = test_video_render_create(behaviour, &status);
+//    if(!render)
+//    {
+//       behaviour->init_result = MMALCAM_INIT_ERROR_RENDER;
+//       goto error;
+//    }
+//    render_port = render->input[0];
 
-   status = connect_ports(viewfinder_port, render_port, &queue_viewfinder, &pool_viewfinder);
-   if (status != MMAL_SUCCESS)
-   {
-      behaviour->init_result = MMALCAM_INIT_ERROR_VIEWFINDER;
-      goto error;
-   }
+//    status = connect_ports(viewfinder_port, render_port, &queue_viewfinder, &pool_viewfinder);
+//    if (status != MMAL_SUCCESS)
+//    {
+//       behaviour->init_result = MMALCAM_INIT_ERROR_VIEWFINDER;
+//       goto error;
+//    }
 
    /*...*/
    MMAL_PARAMETER_BOOLEAN_T camera_capture =
@@ -1338,8 +1338,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       behaviour->init_result = MMALCAM_INIT_ERROR_CAMERA_CAPTURE;
       goto error;
    }
-   
-   // output = fopen(behaviour->uri, "wb");
 
    /* Initialisation now complete */
    behaviour->init_result = MMALCAM_INIT_SUCCESS;
@@ -1367,10 +1365,10 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
          }
       }
 
-      /* Send empty buffers to the output ports */
-      status = fill_port_from_pool(viewfinder_port, pool_viewfinder);
-      if (status != MMAL_SUCCESS)
-         break;
+    //   /* Send empty buffers to the output ports */
+    //   status = fill_port_from_pool(viewfinder_port, pool_viewfinder);
+    //   if (status != MMAL_SUCCESS)
+    //      break;
       status = fill_port_from_pool(video_port, pool_encoder_in);
       if (status != MMAL_SUCCESS)
          break;
@@ -1378,10 +1376,10 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       if (status != MMAL_SUCCESS)
          break;
 
-      /* Process filled output buffers */
-      status = send_buffer_from_queue(render_port, queue_viewfinder);
-      if (status != MMAL_SUCCESS)
-         break;
+    //   /* Process filled output buffers */
+    //   status = send_buffer_from_queue(render_port, queue_viewfinder);
+    //   if (status != MMAL_SUCCESS)
+    //      break;
       status = send_buffer_from_queue(encoder_input, queue_encoder_in);
       if (status != MMAL_SUCCESS)
          break;
@@ -1393,10 +1391,7 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
          if (buffer)
          {
             mmal_buffer_header_mem_lock(buffer);
-            // LOG_ERROR("Write %d bytes of data from %p", buffer->length, buffer->data);
-            // fwrite(buffer->data, 1, buffer->length, output);
             cb(buffer);
-            // LOG_ERROR("FLags %d", buffer->flags);
             mmal_buffer_header_mem_unlock(buffer);
             packet_count++;
             mmal_buffer_header_release(buffer);
@@ -1460,20 +1455,20 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    }
 
    /* Disable ports */
-   disable_port(viewfinder_port);
-   disable_port(render_port);
+//    disable_port(viewfinder_port);
+//    disable_port(render_port);
    disable_port(video_port);
    disable_port(encoder_input);
    disable_port(encoder_output);
 
    /* Disable components */
-   mmal_component_disable(render);
+//    mmal_component_disable(render);
    if (encoder)
       mmal_component_disable(encoder);
    mmal_component_disable(camera);
 
    INIT_PARAMETER(behaviour->render_stats, MMAL_PARAMETER_STATISTICS);
-   mmal_port_parameter_get(render_port, &behaviour->render_stats.hdr);
+//    mmal_port_parameter_get(render_port, &behaviour->render_stats.hdr);
    if (encoder)
    {
       INIT_PARAMETER(behaviour->encoder_stats, MMAL_PARAMETER_STATISTICS);
@@ -1482,22 +1477,22 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
 
  error:
    /* The pools need to be destroyed first since they are owned by the components */
-   if(pool_viewfinder)
-      mmal_port_pool_destroy(viewfinder_port, pool_viewfinder);
+//    if(pool_viewfinder)
+//       mmal_port_pool_destroy(viewfinder_port, pool_viewfinder);
    if(pool_encoder_in)
       mmal_port_pool_destroy(video_port, pool_encoder_in);
    if(pool_encoder_out)
       mmal_port_pool_destroy(encoder_output, pool_encoder_out);
 
-   if(render)
-      mmal_component_destroy(render);
+//    if(render)
+    //   mmal_component_destroy(render);
    if(encoder)
       mmal_component_destroy(encoder);
    if(camera)
       mmal_component_destroy(camera);
 
-   if(queue_viewfinder)
-      mmal_queue_destroy(queue_viewfinder);
+//    if(queue_viewfinder)
+    //   mmal_queue_destroy(queue_viewfinder);
    if(queue_encoder_in)
       mmal_queue_destroy(queue_encoder_in);
    if(queue_encoder_out)
