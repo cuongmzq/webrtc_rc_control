@@ -41,7 +41,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "config.h"
 
 /** Number of buffers we want to use for video render. Video render needs at least 2. */
-#define VIDEO_OUTPUT_BUFFERS_NUM 1
+#define VIDEO_OUTPUT_BUFFERS_NUM 3
 
 /** Initialise a parameter structure */
 #define INIT_PARAMETER(PARAM, PARAM_ID)   \
