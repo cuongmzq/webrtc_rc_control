@@ -40,21 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "config.h"
 
-#define USE_CONTAINER 0
-
-#if USE_CONTAINER
-#include "containers/containers.h"
-#include "containers/core/containers_utils.h" // FIXME
-#include "containers/containers_codecs.h"
-#endif
-
 /** Number of buffers we want to use for video render. Video render needs at least 2. */
-#define VIDEO_OUTPUT_BUFFERS_NUM 3
-
-/** After this many packets, the container (if any) will be closed and we
- * start discarding encoded packets.
- */
-#define MAX_PACKET_COUNT 150
+#define VIDEO_OUTPUT_BUFFERS_NUM 1
 
 /** Initialise a parameter structure */
 #define INIT_PARAMETER(PARAM, PARAM_ID)   \
@@ -63,13 +50,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
       (PARAM).hdr.id = PARAM_ID;          \
       (PARAM).hdr.size = sizeof(PARAM);   \
    } while (0)
-
-/* Utility functions to manipulate containers */
-#if USE_CONTAINER
-static VC_CONTAINER_T *test_container_open(const char *uri, MMAL_ES_FORMAT_T* format, MMAL_STATUS_T *status);
-static MMAL_STATUS_T test_container_write(VC_CONTAINER_T *container, MMAL_BUFFER_HEADER_T *buffer);
-static VC_CONTAINER_FOURCC_T test_container_encoding_to_codec(uint32_t encoding);
-#endif
 
 /* Utility function to create and setup the camera viewfinder component */
 static MMAL_COMPONENT_T *test_camera_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status);
@@ -81,9 +61,6 @@ static MMAL_BOOL_T mmalcam_reset_focus(MMAL_COMPONENT_T *camera, MMAL_PARAM_FOCU
 static MMAL_BOOL_T mmalcam_next_drc(MMAL_COMPONENT_T *camera);
 static MMAL_BOOL_T mmalcam_next_hdr(MMAL_COMPONENT_T *camera);
 static MMAL_BOOL_T mmalcam_next_colour_param(MMAL_COMPONENT_T *camera, uint32_t id, int min, int max, const char *param_name);
-
-/* Utility function to create and setup the video render component */
-static MMAL_COMPONENT_T *test_video_render_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status);
 
 /* Utility function to create and setup the video encoder component */
 static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status);
@@ -836,80 +813,6 @@ static MMAL_BOOL_T mmalcam_next_colour_param(MMAL_COMPONENT_T *camera, uint32_t 
    return MMAL_TRUE;
 }
 
-
-/*****************************************************************************/
-static MMAL_COMPONENT_T *test_video_render_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status)
-{
-   MMAL_COMPONENT_T *render = 0;
-   MMAL_PORT_T *render_port = NULL;
-
-   *status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &render);
-   if(*status != MMAL_SUCCESS)
-   {
-      LOG_ERROR("couldn't create video render");
-      goto error;
-   }
-   if(!render->input_num)
-   {
-      LOG_ERROR("video render doesn't have input ports");
-      *status = MMAL_EINVAL;
-      goto error;
-   }
-
-   render_port = render->input[0];
-
-   /* Give higher priority to the overlay layer */
-   MMAL_DISPLAYREGION_T param;
-   param.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
-   param.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
-   param.set = MMAL_DISPLAY_SET_LAYER;
-   param.layer = behaviour->layer;
-   if (behaviour->display_area.width && behaviour->display_area.height)
-   {
-      param.set |= MMAL_DISPLAY_SET_DEST_RECT | MMAL_DISPLAY_SET_FULLSCREEN;
-      param.fullscreen = 0;
-      param.dest_rect = behaviour->display_area;
-   }
-   *status = mmal_port_parameter_set( render_port, &param.hdr );
-   if (*status != MMAL_SUCCESS && *status != MMAL_ENOSYS)
-   {
-      LOG_ERROR("could not set video render display properties (%u)", *status);
-      goto error;
-   }
-
-   if (enable_zero_copy())
-   {
-      MMAL_PARAMETER_BOOLEAN_T param_zc =
-         {{MMAL_PARAMETER_ZERO_COPY, sizeof(MMAL_PARAMETER_BOOLEAN_T)}, 1};
-      *status = mmal_port_parameter_set(render_port, &param_zc.hdr);
-      if (*status != MMAL_SUCCESS && *status != MMAL_ENOSYS)
-      {
-         LOG_ERROR("failed to set zero copy on render input");
-         goto error;
-      }
-      LOG_INFO("enabled zero copy on render");
-   }
-
-   if (behaviour->opaque)
-   {
-      render_port->format->encoding = MMAL_ENCODING_OPAQUE;
-   }
-
-   /* Enable component */
-   *status = mmal_component_enable(render);
-   if(*status)
-   {
-      LOG_ERROR("video render component couldn't be enabled (%u)", *status);
-      goto error;
-   }
-
-   return render;
-
- error:
-   if(render) mmal_component_destroy(render);
-   return 0;
-}
-
 /*****************************************************************************/
 static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status)
 {
@@ -1192,7 +1095,7 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
             mmal_buffer_header_mem_lock(buffer);
             
             cb(buffer);
-            
+
             mmal_buffer_header_mem_unlock(buffer);
             packet_count++;
             mmal_buffer_header_release(buffer);
