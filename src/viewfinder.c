@@ -492,12 +492,12 @@ static MMAL_COMPONENT_T *test_camera_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL
    format->es->video.crop.height = height;
    format->es->video.frame_rate = behaviour->frame_rate;
 
-   *status = mmal_port_format_commit(viewfinder_port);
-   if(*status)
-   {
-      LOG_ERROR("camera viewfinder format couldn't be set");
-      goto error;
-   }
+//    *status = mmal_port_format_commit(viewfinder_port);
+//    if(*status)
+//    {
+//       LOG_ERROR("camera viewfinder format couldn't be set");
+//       goto error;
+//    }
 
    /* Set the same format on the video (for encoder) port */
    mmal_format_full_copy(video_port->format, format);
@@ -512,18 +512,18 @@ static MMAL_COMPONENT_T *test_camera_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL
    if (video_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
       video_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
 
-   /* Set the same format on the still (for encoder) port */
-   mmal_format_full_copy(still_port->format, format);
-   *status = mmal_port_format_commit(still_port);
-   if(*status)
-   {
-      LOG_ERROR("camera still format couldn't be set");
-      goto error;
-   }
+//    /* Set the same format on the still (for encoder) port */
+//    mmal_format_full_copy(still_port->format, format);
+//    *status = mmal_port_format_commit(still_port);
+//    if(*status)
+//    {
+//       LOG_ERROR("camera still format couldn't be set");
+//       goto error;
+//    }
 
-   /* Ensure there are enough buffers to avoid dropping frames */
-   if (still_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
-      still_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
+//    /* Ensure there are enough buffers to avoid dropping frames */
+//    if (still_port->buffer_num < VIDEO_OUTPUT_BUFFERS_NUM)
+//       still_port->buffer_num = VIDEO_OUTPUT_BUFFERS_NUM;
 
    /* Enable component */
    *status = mmal_component_enable(camera);
