@@ -902,6 +902,12 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
         // Continue rather than abort..
     }
 
+    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_ENCODE_SEPARATE_NAL_BUFS, 1) != MMAL_SUCCESS)
+    {
+        vcos_log_error("failed to set SEPARATE_NAL_BUFS");
+        // Continue rather than abort..
+    }
+
 {    
     MMAL_PARAMETER_UINT32_T param = {
         {MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, INTRAPERIOD};
