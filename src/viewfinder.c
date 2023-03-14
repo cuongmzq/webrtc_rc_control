@@ -65,6 +65,7 @@ static MMAL_BOOL_T mmalcam_next_colour_param(MMAL_COMPONENT_T *camera, uint32_t 
 /* Utility function to create and setup the video encoder component */
 static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status);
 
+static void request_i_frame();
 /*****************************************************************************/
 
 typedef enum {
@@ -991,6 +992,14 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
 }
 
 /*****************************************************************************/
+MMAL_PORT_T *encoder_input = 0, *encoder_output = 0;
+void request_i_frame() {
+    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
+    {
+        vcos_log_error("failed to request I-FRAME");
+    }
+}
+
 int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_buffer_cb cb)
 {
    MMAL_STATUS_T status = MMAL_SUCCESS;
@@ -998,7 +1007,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    MMAL_QUEUE_T *queue_encoder_in = 0, *queue_encoder_out = 0;
    MMAL_COMPONENT_T *camera = 0, *encoder = 0;
    MMAL_PORT_T *video_port = 0;
-   MMAL_PORT_T *encoder_input = 0, *encoder_output = 0;
    uint32_t ms_per_change, last_change_ms, set_focus_delay_ms;
    int packet_count = 0;
 
@@ -1065,11 +1073,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
     int is_start = 0;
    while(1)
    {
-        // if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
-        // {
-        //     vcos_log_error("failed to request I-FRAME");
-        // }
-
       MMAL_BUFFER_HEADER_T *buffer;
       VCOS_UNSIGNED set;
 

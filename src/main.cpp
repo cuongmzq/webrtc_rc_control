@@ -17,6 +17,7 @@ extern "C" {
     #include "mmalcam.h"
     
     int start_mmalcam(on_buffer_cb cb);
+    void request_i_frame();
 }
 #ifdef _WIN32
 #include <winsock2.h>
@@ -244,6 +245,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
             }
         });
         cout << "Video from " << id << " opened" << endl;
+        request_i_frame();
     });
 
     auto dc = pc->createDataChannel("ping-pong");
