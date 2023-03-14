@@ -1063,6 +1063,11 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
    last_change_ms = vcos_get_ms();
    set_focus_delay_ms = 1000;
 
+    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
+    {
+        vcos_log_error("failed to request I-FRAME");
+    }
+
    while(1)
    {
       MMAL_BUFFER_HEADER_T *buffer;
