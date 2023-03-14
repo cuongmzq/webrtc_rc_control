@@ -1059,7 +1059,7 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
 
    while(1)
    {
-       if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, IMMUTABLE_OUTPUT) != MMAL_SUCCESS)
+        if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, IMMUTABLE_OUTPUT) != MMAL_SUCCESS)
         {
             vcos_log_error("Unable to set immutable input flag");
             // Continue rather than abort..
