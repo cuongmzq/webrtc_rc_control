@@ -969,17 +969,6 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
         // Continue rather than abort..
     }
 
-   if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, IMMUTABLE_OUTPUT) != MMAL_SUCCESS)
-   {
-      vcos_log_error("Unable to set immutable input flag");
-      // Continue rather than abort..
-   }
-
-    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
-    {
-        vcos_log_error("failed to request I-FRAME");
-    }
-
    /* Enable component */
    *status = mmal_component_enable(encoder);
    if(*status)
@@ -1070,6 +1059,12 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
 
    while(1)
    {
+       if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, IMMUTABLE_OUTPUT) != MMAL_SUCCESS)
+        {
+            vcos_log_error("Unable to set immutable input flag");
+            // Continue rather than abort..
+        }
+
       MMAL_BUFFER_HEADER_T *buffer;
       VCOS_UNSIGNED set;
 
