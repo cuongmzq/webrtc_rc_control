@@ -17,7 +17,7 @@ extern "C" {
     #include "mmalcam.h"
     
     int start_mmalcam(on_buffer_cb cb);
-    void request_i_frame();
+    static void request_i_frame();
 }
 #ifdef _WIN32
 #include <winsock2.h>
