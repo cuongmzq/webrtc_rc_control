@@ -993,7 +993,7 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
 
 /*****************************************************************************/
 MMAL_PORT_T *encoder_input = 0, *encoder_output = 0;
-void request_i_frame() {
+static void request_i_frame() {
     if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
     {
         vcos_log_error("failed to request I-FRAME");
