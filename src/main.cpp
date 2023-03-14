@@ -17,7 +17,7 @@ extern "C" {
     #include "mmalcam.h"
     #include "viewfinder.h"
     int start_mmalcam(on_buffer_cb cb);
-    static void request_i_frame();
+    void request_i_frame();
 }
 #ifdef _WIN32
 #include <winsock2.h>
