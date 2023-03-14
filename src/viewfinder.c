@@ -975,6 +975,11 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
       // Continue rather than abort..
    }
 
+    if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
+    {
+        vcos_log_error("failed to request I-FRAME");
+    }
+
    /* Enable component */
    *status = mmal_component_enable(encoder);
    if(*status)
@@ -1101,12 +1106,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
             mmal_buffer_header_mem_lock(buffer);
             
             cb(buffer);
-            if (buffer->flags & MMAL_BUFFER_HEADER_FLAG_CONFIG) {
-                if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
-                {
-                    vcos_log_error("failed to request I-FRAME");
-                }
-            }
 
             mmal_buffer_header_mem_unlock(buffer);
             packet_count++;
