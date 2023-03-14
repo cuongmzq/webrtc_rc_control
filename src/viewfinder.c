@@ -65,7 +65,6 @@ static MMAL_BOOL_T mmalcam_next_colour_param(MMAL_COMPONENT_T *camera, uint32_t 
 /* Utility function to create and setup the video encoder component */
 static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviour, MMAL_STATUS_T *status);
 
-static void request_i_frame();
 /*****************************************************************************/
 
 typedef enum {
