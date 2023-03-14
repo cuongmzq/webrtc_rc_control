@@ -1065,14 +1065,6 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
     int is_start = 0;
    while(1)
    {
-    if (is_start < 5) {
-        if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
-        {
-            vcos_log_error("failed to request I-FRAME");
-        }
-        is_start++;
-    }
-    
       MMAL_BUFFER_HEADER_T *buffer;
       VCOS_UNSIGNED set;
 
@@ -1103,6 +1095,14 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       /* Process output buffers from encoder */
       if (queue_encoder_out)
       {
+        if (is_start < 5) {
+            if (mmal_port_parameter_set_boolean(encoder_output, MMAL_PARAMETER_VIDEO_REQUEST_I_FRAME, 1) != MMAL_SUCCESS)
+            {
+                vcos_log_error("failed to request I-FRAME");
+            }
+            is_start++;
+        }
+
          buffer = mmal_queue_get(queue_encoder_out);
          if (buffer)
          {
