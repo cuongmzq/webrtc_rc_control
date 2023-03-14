@@ -90,7 +90,7 @@ async function sendAnswer(pc) {
     // document.getElementById('answer-sdp').textContent = answer.sdp;
 
     websocket.send(JSON.stringify({
-        id: "server",
+        id: clientId,
         type: answer.type,
         sdp: answer.sdp,
     }));
