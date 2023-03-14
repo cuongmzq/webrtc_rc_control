@@ -104,7 +104,7 @@ async function handleOffer(offer) {
 
 function sendRequest() {
     websocket.send(JSON.stringify({
-        id: "server",
+        id: clientId,
         type: "request",
     }));
 }
