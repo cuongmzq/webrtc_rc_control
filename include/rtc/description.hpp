@@ -26,7 +26,7 @@ const string DEFAULT_OPUS_AUDIO_PROFILE =
 // https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs#Supported_video_codecs
 // TODO: Should be 42E0 but 42C0 appears to be more compatible. Investigate this.
 const string DEFAULT_H264_VIDEO_PROFILE =
-    "profile-level-id=42e01f;packetization-mode=0;level-asymmetry-allowed=1";
+    "profile-level-id=42e01f;packetization-mode=1;level-asymmetry-allowed=1";
 
 class RTC_CPP_EXPORT Description {
 public:
