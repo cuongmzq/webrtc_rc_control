@@ -115,7 +115,6 @@ static void *mmal_camcorder(struct mmalcam_args *args);
 
 
 int start_mmalcam(on_buffer_cb cb);
-static void request_i_frame();
 #ifdef __cplusplus
 }
 #endif

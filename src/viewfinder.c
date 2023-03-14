@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdarg.h>
 
 #include "mmalcam.h"
+#include "viewfinder.h"
 
 #include "interface/mmal/mmal.h"
 #include "interface/mmal/mmal_logging.h"

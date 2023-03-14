@@ -15,7 +15,7 @@
 #include "h264_common.h"
 extern "C" {
     #include "mmalcam.h"
-    
+    #include "viewfinder.h"
     int start_mmalcam(on_buffer_cb cb);
     static void request_i_frame();
 }
