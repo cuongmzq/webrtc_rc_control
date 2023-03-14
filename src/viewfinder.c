@@ -908,14 +908,14 @@ static MMAL_COMPONENT_T *test_video_encoder_create(MMALCAM_BEHAVIOUR_T *behaviou
         // Continue rather than abort..
     }
 
-// {    
-    // MMAL_PARAMETER_UINT32_T param = {
-    //     {MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, INTRAPERIOD};
-    // *status = mmal_port_parameter_set(encoder_output, &param.hdr);
-    // if (*status != MMAL_SUCCESS) {
-    //     vcos_log_error("Unable to set intraperiod");
-    //     goto error;
-    // }}
+{    
+    MMAL_PARAMETER_UINT32_T param = {
+        {MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, INTRAPERIOD};
+    *status = mmal_port_parameter_set(encoder_output, &param.hdr);
+    if (*status != MMAL_SUCCESS) {
+        vcos_log_error("Unable to set intraperiod");
+        goto error;
+    }}
 
     
 {    
