@@ -74,6 +74,7 @@ int start_mmalcam(on_buffer_cb cb) {
     camcorder_behaviour.vformat = DEFAULT_VIDEO_FORMAT;
     camcorder_behaviour.zero_copy = 1;
     camcorder_behaviour.bit_rate = DEFAULT_BIT_RATE;
+    camcorder_behaviour.frame_rate = FRAME_RATE;
     camcorder_behaviour.focus_test = MMAL_PARAM_FOCUS_MAX;
     camcorder_behaviour.camera_num = DEFAULT_CAM_NUM;
 
