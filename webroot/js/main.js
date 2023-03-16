@@ -74,9 +74,9 @@ let targetThrottleValue = 1500;
 let moveFactor = 0.05;
 let moveFactor2 = 0.05;
 
-const THROTTLE_MIN = 1100;
-const THROTTLE_MID = 1500;
-const THROTTLE_MAX = 1650;
+let THROTTLE_MIN = 1250;
+let THROTTLE_MID = 1500;
+let THROTTLE_MAX = 1650;
 
 const STEER_MIN = 1350;
 const STEER_MID = 1550;
