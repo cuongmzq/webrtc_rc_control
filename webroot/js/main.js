@@ -74,7 +74,7 @@ let targetThrottleValue = 1500;
 let moveFactor = 0.05;
 let moveFactor2 = 0.05;
 
-let THROTTLE_MIN = 1250;
+let THROTTLE_MIN = 1200;
 let THROTTLE_MID = 1500;
 let THROTTLE_MAX = 1600;
 
