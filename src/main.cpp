@@ -296,7 +296,7 @@ void addToStream(shared_ptr<Client> client, bool isAddingVideo) {
 
 H264::NaluIndex indexPrev = {0, 0, 0};
 H264::NaluIndex indexCurr = {0, 0, 0};
-size_t count = 0;
+size_t m_count = 0;
 // H264 NaluIndex index = {i, i + 3, 0};
 
 void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
@@ -326,7 +326,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
             --indexCurr.start_offset;
 
             // Update length of previous entry.
-            if (count > 0) {
+            if (m_count > 0) {
                 indexPrev->payload_size = indexCurr.start_offset - indexPrev.payload_start_offset;
                 start_ptr = s_buf + s_buf_length;
                 s_buf_length += 4 + indexPrev->payload_size;
@@ -352,7 +352,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 }
             }
 
-            count++;
+            m_count++;
         }
 
         i += 3;
@@ -363,7 +363,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
 
   // Update length of last entry, if any.
   auto it = nalu_indices.rbegin();
-  if (count > 0) {
+  if (m_count > 0) {
     indexCurr->payload_size = buffer->length - indexCurr->payload_start_offset;
     
     start_ptr = s_buf + s_buf_length;
