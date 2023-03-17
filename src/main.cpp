@@ -327,16 +327,16 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
 
             // Update length of previous entry.
             if (m_count > 0) {
-                indexPrev.payload_size = indexCurr.start_offset - indexPrev.payload_start_offset;
+                indexPrev->payload_size = indexCurr.start_offset - indexPrev.payload_start_offset;
                 start_ptr = s_buf + s_buf_length;
-                s_buf_length += 4 + indexPrev.payload_size;
+                s_buf_length += 4 + indexPrev->payload_size;
 
-                memcpy(start_ptr + 4, buffer->data + indexPrev.payload_start_offset, indexPrev.payload_size);
+                memcpy(start_ptr + 4, buffer->data + indexPrev->payload_start_offset, indexPrev->payload_size);
 
-                *(start_ptr)        = static_cast<std::byte>((indexPrev.payload_size >> 24) & 0xFF);
-                *(start_ptr + 1)    = static_cast<std::byte>((indexPrev.payload_size >> 16) & 0xFF);
-                *(start_ptr + 2)    = static_cast<std::byte>((indexPrev.payload_size >> 8) & 0xFF);
-                *(start_ptr + 3)    = static_cast<std::byte>((indexPrev.payload_size >> 0) & 0xFF);
+                *(start_ptr)        = static_cast<std::byte>((indexPrev->payload_size >> 24) & 0xFF);
+                *(start_ptr + 1)    = static_cast<std::byte>((indexPrev->payload_size >> 16) & 0xFF);
+                *(start_ptr + 2)    = static_cast<std::byte>((indexPrev->payload_size >> 8) & 0xFF);
+                *(start_ptr + 3)    = static_cast<std::byte>((indexPrev->payload_size >> 0) & 0xFF);
 
                 auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
                 switch (type) {
@@ -364,17 +364,17 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
   // Update length of last entry, if any.
   auto it = nalu_indices.rbegin();
   if (m_count > 0) {
-    indexCurr.payload_size = buffer->length - indexCurr.payload_start_offset;
+    indexCurr->payload_size = buffer->length - indexCurr->payload_start_offset;
     
     start_ptr = s_buf + s_buf_length;
-    s_buf_length += 4 + indexCurr.payload_size;
+    s_buf_length += 4 + indexCurr->payload_size;
 
-    memcpy(start_ptr + 4, buffer->data + indexCurr.payload_start_offset, indexCurr.payload_size);
+    memcpy(start_ptr + 4, buffer->data + indexCurr->payload_start_offset, indexCurr->payload_size);
 
-    *(start_ptr)        = static_cast<std::byte>((indexCurr.payload_size >> 24) & 0xFF);
-    *(start_ptr + 1)    = static_cast<std::byte>((indexCurr.payload_size >> 16) & 0xFF);
-    *(start_ptr + 2)    = static_cast<std::byte>((indexCurr.payload_size >> 8) & 0xFF);
-    *(start_ptr + 3)    = static_cast<std::byte>((indexCurr.payload_size >> 0) & 0xFF);
+    *(start_ptr)        = static_cast<std::byte>((indexCurr->payload_size >> 24) & 0xFF);
+    *(start_ptr + 1)    = static_cast<std::byte>((indexCurr->payload_size >> 16) & 0xFF);
+    *(start_ptr + 2)    = static_cast<std::byte>((indexCurr->payload_size >> 8) & 0xFF);
+    *(start_ptr + 3)    = static_cast<std::byte>((indexCurr->payload_size >> 0) & 0xFF);
 
     auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
     switch (type) {
