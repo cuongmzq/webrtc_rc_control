@@ -341,7 +341,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 // get elapsed time in clock rate
                 uint32_t elapsedTimestamp = rtpConfig->secondsToTimestamp(elapsedSeconds);
                 // set new timestamp
-                rtpConfig->timestamp = rtpConfig->startTimestamp + elapsedTimestamp;
+                rtpConfig->timestamp = rtpConfig->startTimestamp + elapsedTimestamp - 10;
 
                 // get elapsed time in clock rate from last RTCP sender report
                 auto reportElapsedTimestamp = rtpConfig->timestamp - trackData->sender->lastReportedTimestamp();
