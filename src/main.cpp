@@ -294,6 +294,10 @@ void addToStream(shared_ptr<Client> client, bool isAddingVideo) {
     sendInitialNalus(client->video.value(), last_frame_timestamp);
 }
 
+H264::NaluIndex indexPrev = {0, 0, 0};
+H264::NaluIndex indexCurr = {0, 0, 0};
+size_t count = 0;
+// H264 NaluIndex index = {i, i + 3, 0};
 
 void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     if (pending_frame) {
@@ -308,37 +312,116 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     last_frame_duration = buffer->pts - last_frame_timestamp;
     last_frame_timestamp = buffer->pts;
 
-    std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
-    // std::cout << "H264 start " << buffer->offset << " length " << buffer->length << std::endl;
-    for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
-        size_t start_offset = jt->start_offset;
-        size_t payload_start_offset = jt->payload_start_offset;
-        size_t payload_size = jt->payload_size;
-        // std::cout << "NALU start " << start_offset << " PAYLOAd offset " << payload_start_offset << " length " << payload_size << std::endl;
-        
-        start_ptr = s_buf + s_buf_length;
-        s_buf_length += 4 + payload_size;
+    const size_t end = buffer->length - H264::kNaluShortStartSequenceSize;
+    for (size_t i = 0; i < end;) {
+        if (buffer->data[i + 2] > 1) {
+        i += 3;
+        } else if (buffer->data[i + 2] == 1) {
+        if (buffer->data[i + 1] == 0 && buffer->data[i] == 0) {
+            // We found a start sequence, now check if it was a 3 of 4 byte one.
+            indexCurr.start_offset = i;
+            indexCurr.payload_start_offset = i + 3;
+            indexCurr.payload_size = 0;
+            if (indexCurr.start_offset > 0 && buffer->data[indexCurr.start_offset - 1] == 0)
+            --indexCurr.start_offset;
 
-        memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
+            // Update length of previous entry.
+            if (count > 0) {
+                indexPrev->payload_size = indexCurr.start_offset - indexPrev.payload_start_offset;
+                start_ptr = s_buf + s_buf_length;
+                s_buf_length += 4 + indexPrev->payload_size;
 
-        *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
-        *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
-        *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
-        *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
+                memcpy(start_ptr + 4, buffer->data + indexPrev->payload_start_offset, indexPrev->payload_size);
 
-        auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
-        switch (type) {
-            case 7:
-                previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
-                break;
-            case 8:
-                previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
-                break;
-            case 5:
-                previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
-                break;
+                *(start_ptr)        = static_cast<std::byte>((indexPrev->payload_size >> 24) & 0xFF);
+                *(start_ptr + 1)    = static_cast<std::byte>((indexPrev->payload_size >> 16) & 0xFF);
+                *(start_ptr + 2)    = static_cast<std::byte>((indexPrev->payload_size >> 8) & 0xFF);
+                *(start_ptr + 3)    = static_cast<std::byte>((indexPrev->payload_size >> 0) & 0xFF);
+
+                auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+                switch (type) {
+                    case 7:
+                        previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
+                        break;
+                    case 8:
+                        previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
+                        break;
+                    case 5:
+                        previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
+                        break;
+                }
+            }
+
+            count++;
+        }
+
+        i += 3;
+        } else {
+        ++i;
         }
     }
+
+  // Update length of last entry, if any.
+  auto it = nalu_indices.rbegin();
+  if (count > 0) {
+    indexCurr->payload_size = buffer->length - indexCurr->payload_start_offset;
+    
+    start_ptr = s_buf + s_buf_length;
+    s_buf_length += 4 + indexCurr->payload_size;
+
+    memcpy(start_ptr + 4, buffer->data + indexCurr->payload_start_offset, indexCurr->payload_size);
+
+    *(start_ptr)        = static_cast<std::byte>((indexCurr->payload_size >> 24) & 0xFF);
+    *(start_ptr + 1)    = static_cast<std::byte>((indexCurr->payload_size >> 16) & 0xFF);
+    *(start_ptr + 2)    = static_cast<std::byte>((indexCurr->payload_size >> 8) & 0xFF);
+    *(start_ptr + 3)    = static_cast<std::byte>((indexCurr->payload_size >> 0) & 0xFF);
+
+    auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+    switch (type) {
+        case 7:
+            previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
+            break;
+        case 8:
+            previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
+            break;
+        case 5:
+            previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
+            break;
+    }
+  }
+
+
+    // std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
+    // // std::cout << "H264 start " << buffer->offset << " length " << buffer->length << std::endl;
+    // for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
+    //     size_t start_offset = jt->start_offset;
+    //     size_t payload_start_offset = jt->payload_start_offset;
+    //     size_t payload_size = jt->payload_size;
+    //     // std::cout << "NALU start " << start_offset << " PAYLOAd offset " << payload_start_offset << " length " << payload_size << std::endl;
+        
+    //     start_ptr = s_buf + s_buf_length;
+    //     s_buf_length += 4 + payload_size;
+
+    //     memcpy(start_ptr + 4, buffer->data + payload_start_offset, payload_size);
+
+    //     *(start_ptr)        = static_cast<std::byte>((payload_size >> 24) & 0xFF);
+    //     *(start_ptr + 1)    = static_cast<std::byte>((payload_size >> 16) & 0xFF);
+    //     *(start_ptr + 2)    = static_cast<std::byte>((payload_size >> 8) & 0xFF);
+    //     *(start_ptr + 3)    = static_cast<std::byte>((payload_size >> 0) & 0xFF);
+
+    //     auto type = H264::ParseNaluType(*(reinterpret_cast<std::uint8_t*>(start_ptr + 4)));;
+    //     switch (type) {
+    //         case 7:
+    //             previousUnitType7 = {start_ptr + 4, start_ptr + s_buf_length};
+    //             break;
+    //         case 8:
+    //             previousUnitType8 = {start_ptr + 4, start_ptr + s_buf_length};
+    //             break;
+    //         case 5:
+    //             previousUnitType5 = {start_ptr + 4, start_ptr + s_buf_length};
+    //             break;
+    //     }
+    // }
 
     // std::cout << std::endl;
 
@@ -487,14 +570,14 @@ int run_websocket_server() {
                 if (type == "offer" || type == "answer") {
                     auto sdp = message["sdp"].get<std::string>();
                     pc->setRemoteDescription(rtc::Description(sdp, type));
-                    std::cout << type << " from " << id << " \n" << sdp << std::endl;
+                    // std::cout << type << " from " << id << " \n" << sdp << std::endl;
                 } else if (type == "candidate") {
                     auto sdp = message["candidate"].get<std::string>();
                     auto mid = message["mid"].get<std::string>();
-                    std::cout << "Candiate start" << std::endl;
+                    // std::cout << "Candiate start" << std::endl;
 
                     pc->addRemoteCandidate(rtc::Candidate(sdp, mid));
-                    std::cout << "Candiate complete" << std::endl;
+                    // std::cout << "Candiate complete" << std::endl;
                     
                 }
             }
