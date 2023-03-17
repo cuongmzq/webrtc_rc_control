@@ -337,7 +337,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 auto rtpConfig = trackData->sender->rtpConfig;
 
                 // // sample time is in us, we need to convert it to seconds
-                auto elapsedSeconds = double(last_frame_duration - 10000) / (1000 * 1000);
+                auto elapsedSeconds = double(last_frame_duration - 10) / (1000 * 1000);
                 // get elapsed time in clock rate
                 uint32_t elapsedTimestamp = rtpConfig->secondsToTimestamp(elapsedSeconds);
                 // set new timestamp
