@@ -362,7 +362,6 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     }
 
   // Update length of last entry, if any.
-  auto it = nalu_indices.rbegin();
   if (m_count > 0) {
     indexCurr.payload_size = buffer->length - indexCurr.payload_start_offset;
     
