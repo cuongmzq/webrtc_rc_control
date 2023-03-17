@@ -79,7 +79,7 @@ let THROTTLE_MID = 1500;
 let THROTTLE_MAX = 1600;
 
 const STEER_MIN = 1350;
-const STEER_MID = 1570;
+const STEER_MID = 1565;
 const STEER_MAX = 1700;
 
 function updateSteeringValue(dt) {
