@@ -352,6 +352,10 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 }
             }
 
+            indexPrev.start_offset = indexCurr.start_offset;
+            indexPrev.payload_start_offset = indexCurr.payload_start_offset;
+            indexPrev.payload_size = indexCurr.payload_size;
+
             m_count++;
         }
 
