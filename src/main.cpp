@@ -151,8 +151,7 @@ int main(int argc, char **argv) try {
     } 
 
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-
-    cout << "Cleaning up..." << endl;
+    mmalcam_thread.join();
     gpioTerminate();
     return 0;
 
@@ -194,7 +193,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
     auto client = make_shared<Client>(pc);
 
     pc->onStateChange([id](PeerConnection::State state) {
-        cout << "State: " << state << endl;
+        std::cout << "State: " << state << std::endl;
         if (state == PeerConnection::State::Disconnected ||
             state == PeerConnection::State::Failed ||
             state == PeerConnection::State::Closed) {
@@ -209,7 +208,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
 
     pc->onGatheringStateChange(
         [wpc = make_weak_ptr(pc), id, wws](PeerConnection::GatheringState state) {
-        cout << "Gathering State: " << state << endl;
+        std::cout << "Gathering State: " << state << std::endl;
         if (state == PeerConnection::GatheringState::Complete) {
             if(auto pc = wpc.lock()) {
                 auto description = pc->localDescription();
@@ -232,7 +231,7 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
                 addToStream(c, true);
             }
         });
-        cout << "Video from " << id << " opened" << endl;
+        std::cout << "Video from " << id << " opened" << std::endl;
         request_i_frame();
     });
 
