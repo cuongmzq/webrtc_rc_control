@@ -151,18 +151,6 @@ int main(int argc, char **argv) try {
     } 
 
     std::thread mmalcam_thread(start_mmalcam, &on_mmalcam_buffer);
-    int pwm = 1500;
-    while(true) {
-        std::cout << "Enter #PWM: ";
-        cin >> pwm;
-        if (pwm >= 1000 && pwm <= 2000) {
-            bldc->servo(pwm);
-        } else {
-            std::cout << "Wrong data" << std::endl;
-            pwm = 1500;
-        }
-        cin.ignore();
-    }
 
     cout << "Cleaning up..." << endl;
     gpioTerminate();
@@ -309,12 +297,10 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     last_frame_timestamp = buffer->pts;
 
     std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
-    // std::cout << "H264 start " << buffer->offset << " length " << buffer->length << std::endl;
     for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
         size_t start_offset = jt->start_offset;
         size_t payload_start_offset = jt->payload_start_offset;
         size_t payload_size = jt->payload_size;
-        // std::cout << "NALU start " << start_offset << " PAYLOAd offset " << payload_start_offset << " length " << payload_size << std::endl;
         
         start_ptr = s_buf + s_buf_length;
         s_buf_length += 4 + payload_size;
@@ -339,8 +325,6 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
                 break;
         }
     }
-
-    // std::cout << std::endl;
 
     if (!pending_frame) {
         /** Last working copy**/
@@ -487,15 +471,11 @@ int run_websocket_server() {
                 if (type == "offer" || type == "answer") {
                     auto sdp = message["sdp"].get<std::string>();
                     pc->setRemoteDescription(rtc::Description(sdp, type));
-                    std::cout << type << " from " << id << " \n" << sdp << std::endl;
+                    std::cout << type << " from " << id << std::endl;
                 } else if (type == "candidate") {
                     auto sdp = message["candidate"].get<std::string>();
                     auto mid = message["mid"].get<std::string>();
-                    std::cout << "Candiate start" << std::endl;
-
-                    pc->addRemoteCandidate(rtc::Candidate(sdp, mid));
-                    std::cout << "Candiate complete" << std::endl;
-                    
+                    pc->addRemoteCandidate(rtc::Candidate(sdp, mid));                    
                 }
             }
 		});
