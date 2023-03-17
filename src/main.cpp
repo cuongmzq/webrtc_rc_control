@@ -393,7 +393,7 @@ void on_mmalcam_buffer(MMAL_BUFFER_HEADER_T* buffer) {
     }
   }
 
-    m_count = 0;
+
     // std::vector<H264::NaluIndex> nalu_indices = H264::FindNaluIndices(buffer->data, buffer->length);
     // // std::cout << "H264 start " << buffer->offset << " length " << buffer->length << std::endl;
     // for (auto jt = nalu_indices.begin(); jt < nalu_indices.end(); ++jt) {
