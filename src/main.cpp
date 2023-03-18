@@ -163,7 +163,6 @@ int main(int argc, char **argv) try {
 shared_ptr<ClientTrackData> addVideo(const shared_ptr<PeerConnection> pc, const uint8_t payloadType, const uint32_t ssrc, const string cname, const string msid, const function<void (void)> onOpen) {
     auto video = Description::Video(cname);
     video.addH264Codec(payloadType);
-    video.setBitrate(3000);
     video.addSSRC(ssrc, cname, msid, cname);
     auto track = pc->addTrack(video);
     // create RTP configuration
@@ -237,22 +236,10 @@ shared_ptr<Client> createPeerConnection(const Configuration &config,
 
     auto dc = pc->createDataChannel("ping-pong");
     dc->onOpen([id, wdc = make_weak_ptr(dc)]() {
-        // if (auto dc = wdc.lock()) {
-        //     dc->send("Ping");
-        // }
+
     });
 
     dc->onMessage(nullptr, [id, wdc = make_weak_ptr(dc)](string msg) {
-        /*
-            {x: 100,y:100}
-        */
-        // cout << "Message from " << id << " received: " << msg << endl;
-        // if (auto dc = wdc.lock()) {
-        //     dc->send("Ping");
-        // }
-
-        // data holds either std::string or rtc::binary
-
         nlohmann::json message = nlohmann::json::parse(msg);
 
         auto it = message.find("x");
