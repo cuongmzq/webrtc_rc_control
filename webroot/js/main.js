@@ -80,7 +80,7 @@ let THROTTLE_MAX = 1600;
 
 const STEER_MIN = 1350;
 const STEER_MID = 1555;
-const STEER_MAX = 1700;
+const STEER_MAX = 1750;
 
 function updateSteeringValue(dt) {
     dataX = dataX + (targetSteeringValue - dataX) * moveFactor * dt * 60 / 1000;
