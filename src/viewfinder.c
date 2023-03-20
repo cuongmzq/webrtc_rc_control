@@ -1026,7 +1026,7 @@ int mmal_start_camcorder(volatile int *stop, MMALCAM_BEHAVIOUR_T *behaviour, on_
       behaviour->init_result = MMALCAM_INIT_ERROR_CAMERA;
       goto error;
    }
-   video_port = camera->output[0];
+   video_port = camera->output[1];
 
    /*...*/
    MMAL_PARAMETER_BOOLEAN_T camera_capture =
